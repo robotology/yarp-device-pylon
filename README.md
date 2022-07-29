@@ -1,7 +1,13 @@
 # 1. Hw
 
-## 1.1. Camera model
-daA4200-30mci
+## Important data
+
+**Board architecture:**  
+aarch64  
+**Camera model:**  
+daA4200-30mci  
+**OS**  
+Ubuntu 18.04  
 
 https://docs.baslerweb.com/embedded-vision/daa4200-30mci
 
@@ -13,7 +19,17 @@ For FW flash:
 
 For normal use remove it
 
-# 2. SW
+# 2. Software prerequisites
+
+## Pylon SDK
+For new version check:
+```
+https://www.baslerweb.com/en/downloads/software-downloads/software-pylon-7-1-0-linux-arm-64bit-debian/
+```
+Then
+```bash
+sudo dpkg -i xxx
+```
 
 ## 2.1. robotology repo
 On Nvidia board:
@@ -25,6 +41,24 @@ git clone https://github.com/robotology/yarp-device-basler
 :warning:_Troubleshooting_
 If you haven't yet configured the internet access see below.
 
+## cmake 3.13
+On Ubuntu 18.04 you need at least cmake 3.13
+
+```bash
+sudo apt purge --auto-remove cmake
+sudo apt update && \
+sudo apt install -y software-properties-common lsb-release && \
+sudo apt clean all
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
+sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
+sudo apt update
+sudo apt install kitware-archive-keyring
+sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF7F09730B3F0A4
+sudo apt update
+sudo apt install cmake
+sudo apt install cmake-curses-gui
+```
 ## 2.2. Info
 https://www.baslerweb.com/en/downloads/software-downloads/#type=embedded_software;language=all;version=all
 
@@ -87,3 +121,5 @@ Test from Nvidia `ping 8.8.8.8`
 - Check if the Nvidia is running and is connected. 
 - Check Nvidia address
 - Check if eth board on icub-head is correctly configured
+
+# Development environment with Visual studio code

@@ -25,11 +25,45 @@
 #    include <pylon/PylonGUI.h>
 #endif
 
+#include "CPixelFormatAndAoiConfiguration.h"
+
 // Namespace for using pylon objects.
 using namespace Pylon;
 
 // Namespace for using cout.
 using namespace std;
+
+void printDeviceList()
+{
+    // Get the transport layer factory.
+    CTlFactory& tlFactory = CTlFactory::GetInstance();
+
+    // Get all attached devices and exit application if no device is found.
+    DeviceInfoList_t devices;
+    if (tlFactory.EnumerateDevices( devices ) == 0)
+    {
+      throw RUNTIME_EXCEPTION( "No camera present." );
+    }
+    for(auto current:devices)
+    {
+        std::cout<<current.GetFullName()<<std::endl;
+        std::cout<<current.GetSerialNumber()<<std::endl;
+        
+    }
+}
+
+void configure(CInstantCamera &camera)
+{
+    GenApi::INodeMap& nodemap = camera.GetNodeMap();
+
+    CBooleanParameter scaling(nodemap, "BslScalingEnable");
+    scaling.TrySetValue(true);
+
+    CIntegerParameter width( nodemap, "Width" );
+    CIntegerParameter height( nodemap, "Height" );
+    width.TrySetValue(1024);
+    height.TrySetValue(768);
+}
 
 // Number of images to be grabbed.
 static const uint32_t c_countOfImagesToGrab = 100;
@@ -44,8 +78,19 @@ int main(int argc, char* argv[])
 
     try
     {
+        printDeviceList();
+
         // Create an instant camera object with the camera device found first.
-        CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
+        //CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
+        CDeviceInfo x;
+        //x.SetSerialNumber("40113105");
+        x.SetSerialNumber("40140941");
+        CInstantCamera camera( CTlFactory::GetInstance().CreateDevice(x));
+        camera.Open();
+        //camera.RegisterConfiguration( new CPixelFormatAndAoiConfiguration, RegistrationMode_Append, Cleanup_Delete );
+
+        configure(camera);
+
 
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;

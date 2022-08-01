@@ -1,11 +1,11 @@
 ################################################################################
 #                                                                              #
-# Copyright (C) 2019 Fondazione Istitito Italiano di Tecnologia (IIT)          #
+# Copyright (C) 2022 Fondazione Istitito Italiano di Tecnologia (IIT)          #
 # All Rights Reserved.                                                         #
 #                                                                              #
 ################################################################################
 
-# @author Nicolo Genesio <nicolo.genesio@iit.it> 
+# @author Luca Tricerri <luca.tricerri@iit.it> 
 
 set(grabexampleSrc  Grab.cpp
                         )

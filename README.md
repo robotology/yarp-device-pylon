@@ -123,3 +123,10 @@ Test from Nvidia `ping 8.8.8.8`
 - Check if eth board on icub-head is correctly configured
 
 # Development environment with Visual studio code
+
+# Fast view image on disk
+
+Use:
+```bash
+feh <file name>
+```

@@ -20,6 +20,7 @@
 
 // Include files to use the pylon API.
 #include <pylon/PylonIncludes.h>
+
 #ifdef PYLON_WIN_BUILD
 #    include <pylon/PylonGUI.h>
 #endif
@@ -76,6 +77,25 @@ int main(int argc, char* argv[])
                 cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
                 const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
                 cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
+                size_t bytes= ptrGrabResult->GetBufferSize();
+                
+                //Luca
+                //buffer to image
+                //save image
+                CPylonImage image;
+                image.AttachGrabResultBuffer( ptrGrabResult );
+                if(image.IsValid())
+                {
+                    std::cout<<"Image is valid"<<std::endl;
+                    Pylon::CImagePersistence::Save(Pylon::ImageFileFormat_Png,"test.jpg",image);
+                    return 1;
+                }
+                else
+                {
+                    std::cout<<"Image is not valid"<<std::endl;
+                }
+                ///Luca end
+
 
 #ifdef PYLON_WIN_BUILD
                 // Display the grabbed image.

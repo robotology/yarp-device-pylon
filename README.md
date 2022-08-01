@@ -1,6 +1,6 @@
 # 1. Hw
 
-## Important data
+## 1.1. Important data
 
 **Board architecture:**  
 aarch64  
@@ -21,7 +21,7 @@ For normal use remove it
 
 # 2. Software prerequisites
 
-## Pylon SDK
+## 2.1. Pylon SDK
 For new version check:
 ```
 https://www.baslerweb.com/en/downloads/software-downloads/software-pylon-7-1-0-linux-arm-64bit-debian/
@@ -31,7 +31,7 @@ Then
 sudo dpkg -i xxx
 ```
 
-## 2.1. robotology repo
+## 2.2. robotology repo
 On Nvidia board:
 
 ```
@@ -41,7 +41,7 @@ git clone https://github.com/robotology/yarp-device-basler
 :warning:_Troubleshooting_
 If you haven't yet configured the internet access see below.
 
-## cmake 3.13
+## 2.3. cmake 3.13
 On Ubuntu 18.04 you need at least cmake 3.13
 
 ```bash
@@ -59,13 +59,13 @@ sudo apt update
 sudo apt install cmake
 sudo apt install cmake-curses-gui
 ```
-## 2.2. Info
+## 2.4. Info
 https://www.baslerweb.com/en/downloads/software-downloads/#type=embedded_software;language=all;version=all
 
 Programmer guide:
 https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
 
-## 2.3. Samples location
+## 2.5. Samples location
 On the Nvidia board
 /opt/pylon/share/pylon/Samples/C++
 
@@ -122,11 +122,18 @@ Test from Nvidia `ping 8.8.8.8`
 - Check Nvidia address
 - Check if eth board on icub-head is correctly configured
 
-# Development environment with Visual studio code
+# 5. Development environment with Visual studio code
+TODO
 
-# Fast view image on disk
+# 6. Fast view image on disk
 
 Use:
 ```bash
 feh <file name>
 ```
+
+# Notes
+
+- From https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
+Basler GigE cameras can be configured to send the image data stream to multiple destinations. Either IP multicasts or IP broadcasts can be used. For more information consult the advanced topics section.
+

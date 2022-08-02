@@ -98,6 +98,6 @@ private:
     uint32_t m_width{0};
     Pylon::String_t m_serial_number{""};
     std::unique_ptr<Pylon::CInstantCamera> m_camera_ptr;
-    Pylon::CGrabResultPtr m_grab_result_ptr;
+    //Pylon::CGrabResultPtr m_grab_result_ptr;
 };
 #endif // PYLON_DRIVER_H

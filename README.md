@@ -5,7 +5,9 @@
 **Board architecture:**  
 aarch64  
 **Camera model:**  
-daA4200-30mci  
+daA4200-30mci
+Supported pixel type:
+https://docs.baslerweb.com/embedded-vision/pixel-format#maximum-pixel-bit-depth
 **OS**  
 Ubuntu 18.04  
 

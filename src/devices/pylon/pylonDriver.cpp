@@ -81,8 +81,16 @@ bool pylonDriver::open(Searchable& config)
     }
     yCDebug(PYLON)<<"4";
     // TODO get it from conf
-    m_width  = 1024;
-    m_height = 768;
+
+    GenApi::INodeMap& nodemap = m_camera_ptr->GetNodeMap();
+
+    CBooleanParameter(nodemap, "BslScalingEnable").SetValue(true);
+    CIntegerParameter(nodemap, "Width").SetValue(1920);
+    CIntegerParameter(nodemap, "Height").SetValue(1080);
+    // Set the pixel format to RGB 8
+    //CEnumParameter(nodemap, "PixelFormat").SetValue("Mono8");
+    m_width  = 1920;
+    m_height = 1080;
     // Configuration is done, let's start grabbing
     m_camera_ptr->StartGrabbing();
     return true;
@@ -239,24 +247,60 @@ bool pylonDriver::setOnePush(int feature)
 
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
+    
+    //yCDebug(PYLON)<<"GETTIIMAGE";
     if (m_camera_ptr->IsGrabbing())
     {
-         // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-        m_camera_ptr->RetrieveResult( 5000, m_grab_result_ptr, TimeoutHandling_ThrowException);
+        CGrabResultPtr grab_result_ptr;
+        CPylonImage pylon_image;
+        CImageFormatConverter pylon_format_converter;
+        pylon_format_converter.OutputPixelFormat = PixelType_RGB8packed;
+        // if(first_acquisition){
+        //     yCDebug(PYLON)<<"Discard first frame";
+        //     first_acquisition = false;
+        //     m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
+        //     return true;
+        // }
+        // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
+        m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
 
         // Image grabbed successfully?
-        if (m_grab_result_ptr && m_grab_result_ptr->GrabSucceeded())
+        if (grab_result_ptr && grab_result_ptr->GrabSucceeded())
         {
-            m_width  = m_grab_result_ptr->GetWidth();
-            m_height = m_grab_result_ptr->GetHeight();
+            m_width  = grab_result_ptr->GetWidth();
+            m_height = grab_result_ptr->GetHeight();
             // TODO Check pixel code
             image.resize(m_width, m_height);
 
+            // yCDebug(PYLON)<<"padding x"<<grab_result_ptr->GetPaddingX();
+            // yCDebug(PYLON)<<"padding y"<<grab_result_ptr->GetPaddingY();
+            // yCDebug(PYLON)<<"image size"<<grab_result_ptr->GetImageSize();
+            // yCDebug(PYLON)<<"payload size"<<grab_result_ptr->GetPayloadSize();
+            // yCDebug(PYLON)<<"pixel type is "<<CPixelTypeMapper::GetNameByPixelType(grab_result_ptr->GetPixelType());
+
+            pylon_format_converter.Convert(pylon_image, grab_result_ptr);
+
+            if (!pylon_image.IsValid()) {
+                 yCError(PYLON)<<"Frame invalid!";
+                 return false;
+            }
+
             // Access the image data.
-            yCDebug(PYLON) << "SizeX:" << m_grab_result_ptr->GetWidth();
-            yCDebug(PYLON) << "SizeY:" << m_grab_result_ptr->GetHeight();
-            image.setExternal(m_grab_result_ptr->GetBuffer(), m_width, m_height);
-        } 
+            //yCDebug(PYLON) << "SizeX:" << grab_result_ptr->GetWidth();
+            //yCDebug(PYLON) << "SizeY:" << grab_result_ptr->GetHeight();
+            // For some reason the first frame cannot be converted To be investigated
+            static bool first_acquisition{true};
+            if (first_acquisition) {
+                yCDebug(PYLON)<<"Skipping";
+                first_acquisition = false;
+                return false;
+            }
+            image.setExternal(pylon_image.GetBuffer(), m_width, m_height);
+        }
+        else {
+            yCError(PYLON)<<"Acquisition failed";
+            return false;
+        }
         return true;
     }
     else

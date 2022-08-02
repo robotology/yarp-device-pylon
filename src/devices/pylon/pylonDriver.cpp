@@ -21,6 +21,7 @@
 using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
+using namespace Pylon;
 
 using namespace std;
 
@@ -28,7 +29,7 @@ namespace {
 YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
 }
 
-pylonDriver::pylonDriver()
+pylonDriver::pylonDriver() : m_factory(CTlFactory::GetInstance())
 {
 }
 
@@ -41,6 +42,36 @@ bool pylonDriver::setFramerate(const int _fps)
 
 bool pylonDriver::open(Searchable& config)
 {
+    yCTrace(PYLON) << "input params are " << config.toString();
+    if (!config.check("serial_number"))
+    {
+        yCError(PYLON)<< "serial_number parameter not specified";
+        return false;
+    }
+
+    m_serial_number = config.find("serial_number").asString().c_str();
+    PylonInitialize();
+    try
+    {
+        m_camera = std::make_unique<Pylon::CInstantCamera>(m_factory.CreateDevice(CDeviceInfo().SetSerialNumber(m_serial_number)));
+        if (m_camera) {
+            m_camera->Open();
+            if (!m_camera->IsOpen()) {
+                yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened";
+                return false;
+            }
+        }
+        else {
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened";
+            return false;
+        }
+    }
+    catch (const GenericException &e)
+    {
+        // Error handling.
+        yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened, error:"<<e.GetDescription();
+        return false;
+    }
     return true;
 }
 

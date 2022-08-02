@@ -13,6 +13,7 @@
 #include <cstring>
 #include <map>
 #include <mutex>
+#include <memory>
 
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/IFrameGrabberControls.h>
@@ -32,7 +33,6 @@ class pylonDriver :
         public yarp::dev::IRgbVisualParams
 {
 private:
-    typedef yarp::sig::ImageOf<yarp::sig::PixelFloat> depthImage;
     typedef yarp::os::Stamp                           Stamp;
     typedef yarp::os::Property                        Property;
     typedef yarp::sig::FlexImage                      FlexImage;
@@ -90,9 +90,12 @@ private:
     mutable std::mutex m_mutex;
 
     yarp::os::Stamp m_rgb_stamp;
-    mutable std::string m_lastError;
-    bool m_verbose;
-    bool m_initialized;
-    int m_fps;
+    mutable std::string m_lastError{""};
+    bool m_verbose{false};
+    bool m_initialized{false};
+    int m_fps{30};
+    Pylon::String_t m_serial_number{""};
+    Pylon::CTlFactory& m_factory;
+    std::unique_ptr<Pylon::CInstantCamera> m_camera;
 };
 #endif // PYLON_DRIVER_H

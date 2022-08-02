@@ -29,7 +29,7 @@ namespace {
 YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
 }
 
-pylonDriver::pylonDriver() : m_factory(CTlFactory::GetInstance())
+pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())
 {
 }
 
@@ -48,15 +48,22 @@ bool pylonDriver::open(Searchable& config)
         yCError(PYLON)<< "serial_number parameter not specified";
         return false;
     }
-
-    m_serial_number = config.find("serial_number").asString().c_str();
+    yCDebug(PYLON)<<"1";
+    m_serial_number = config.find("serial_number").toString().c_str();
+    // Initialize pylon resources
     PylonInitialize();
+    // Get factory singleton
+    CTlFactory& factory = CTlFactory::GetInstance();
+    yCDebug(PYLON)<<"SERIAL NUMBER!"<<m_serial_number<<config.find("serial_number").asString();
+    yCDebug(PYLON)<<"2"<<m_serial_number;
+    // Open the device using the S/N
     try
     {
-        m_camera = std::make_unique<Pylon::CInstantCamera>(m_factory.CreateDevice(CDeviceInfo().SetSerialNumber(m_serial_number)));
-        if (m_camera) {
-            m_camera->Open();
-            if (!m_camera->IsOpen()) {
+        m_camera_ptr = std::make_unique<Pylon::CInstantCamera>(factory.CreateDevice(CDeviceInfo().SetSerialNumber(m_serial_number)));
+        yCDebug(PYLON)<<"3";
+        if (m_camera_ptr) {
+            m_camera_ptr->Open();
+            if (!m_camera_ptr->IsOpen()) {
                 yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened";
                 return false;
             }
@@ -72,22 +79,33 @@ bool pylonDriver::open(Searchable& config)
         yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened, error:"<<e.GetDescription();
         return false;
     }
+    yCDebug(PYLON)<<"4";
+    // TODO get it from conf
+    m_width  = 1024;
+    m_height = 768;
+    // Configuration is done, let's start grabbing
+    m_camera_ptr->StartGrabbing();
     return true;
 }
 
 bool pylonDriver::close()
-{
+{   
+    if (m_camera_ptr->IsPylonDeviceAttached()) {
+        m_camera_ptr->DetachDevice();
+    }
+    // Releases all pylon resources. 
+    PylonTerminate(); 
     return true;
 }
 
 int pylonDriver::getRgbHeight()
 {
-    return 0;
+    return m_height;
 }
 
 int pylonDriver::getRgbWidth()
 {
-    return 0;
+    return m_width;
 }
 
 bool pylonDriver::getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations)
@@ -98,14 +116,16 @@ bool pylonDriver::getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig
 
 bool pylonDriver::getRgbResolution(int &width, int &height)
 {
+    width = m_width;
+    height = m_height;
     return true;
 }
 
 
 bool pylonDriver::setRgbResolution(int width, int height)
 {
-
-    return true;
+    // TODO
+    return false;
 }
 
 
@@ -219,15 +239,39 @@ bool pylonDriver::setOnePush(int feature)
 
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
-    return true;
+    if (m_camera_ptr->IsGrabbing())
+    {
+         // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
+        m_camera_ptr->RetrieveResult( 5000, m_grab_result_ptr, TimeoutHandling_ThrowException);
+
+        // Image grabbed successfully?
+        if (m_grab_result_ptr && m_grab_result_ptr->GrabSucceeded())
+        {
+            m_width  = m_grab_result_ptr->GetWidth();
+            m_height = m_grab_result_ptr->GetHeight();
+            // TODO Check pixel code
+            image.resize(m_width, m_height);
+
+            // Access the image data.
+            yCDebug(PYLON) << "SizeX:" << m_grab_result_ptr->GetWidth();
+            yCDebug(PYLON) << "SizeY:" << m_grab_result_ptr->GetHeight();
+            image.setExternal(m_grab_result_ptr->GetBuffer(), m_width, m_height);
+        } 
+        return true;
+    }
+    else
+    {
+        yCError(PYLON)<<"Errors in retrieving images";
+        return false;
+    }
 }
 
 int  pylonDriver::height() const
 {
-    return 0;
+    return m_height;
 }
 
 int  pylonDriver::width() const
 {
-    return 0;
+    return m_width;
 }

@@ -94,8 +94,10 @@ private:
     bool m_verbose{false};
     bool m_initialized{false};
     int m_fps{30};
+    uint32_t m_height{0};
+    uint32_t m_width{0};
     Pylon::String_t m_serial_number{""};
-    Pylon::CTlFactory& m_factory;
-    std::unique_ptr<Pylon::CInstantCamera> m_camera;
+    std::unique_ptr<Pylon::CInstantCamera> m_camera_ptr;
+    Pylon::CGrabResultPtr m_grab_result_ptr;
 };
 #endif // PYLON_DRIVER_H

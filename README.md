@@ -8,6 +8,8 @@ aarch64
 daA4200-30mci
 Supported pixel type:
 https://docs.baslerweb.com/embedded-vision/pixel-format#maximum-pixel-bit-depth
+Available features:
+https://docs.baslerweb.com/embedded-vision/available-features#daa4200-30mci
 **OS**  
 Ubuntu 18.04  
 

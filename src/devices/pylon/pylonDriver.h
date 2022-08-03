@@ -85,9 +85,8 @@ private:
     //method
     //inline bool setParams();
     bool setFramerate(const float _fps);
-    bool parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config);
-    bool parseFloat64Param(std::string param_name, double& param, yarp::os::Searchable& config);
-    bool parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config);
+    bool startCamera();
+    bool stopCamera();
 
 
     mutable std::mutex m_mutex;

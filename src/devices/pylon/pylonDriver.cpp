@@ -36,36 +36,24 @@ pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())
 
 bool pylonDriver::setFramerate(const float _fps)
 {
-    bool stopped{false};
-    if (m_camera_ptr)
+    auto& node_map = m_camera_ptr->GetNodeMap();
+    stopCamera();
+    try
     {
-        auto& node_map = m_camera_ptr->GetNodeMap();
-        if (m_camera_ptr->IsGrabbing())
-        {
-            m_camera_ptr->StopGrabbing();
-            stopped = true;
-        }
-        try
-        {
-            yCDebug(PYLON)<<"Setting framerate to"<<_fps;
-            CFloatParameter(node_map, "AcquisitionFrameRate").SetValue(_fps);
-        }
-        catch (const GenericException &e)
-        {
-            // Error handling.
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set fps to:"<<_fps<<"error:"<<e.GetDescription();
-            return false;
-        }
-        if (stopped)
-        {
-            m_camera_ptr->StartGrabbing();
-        }
-
+        yCDebug(PYLON)<<"Setting framerate to"<<_fps;
+        CFloatParameter(node_map, "AcquisitionFrameRate").SetValue(_fps);
+        m_fps = _fps;
     }
-    return true;
+    catch (const GenericException &e)
+    {
+        // Error handling.
+        yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set fps to:"<<_fps<<"error:"<<e.GetDescription();
+        return false;
+    }
+    return startCamera();
 }
 
-bool pylonDriver::parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config) {
+bool parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config) {
     if (config.check(param_name) && config.find(param_name).isInt32())
     {
         param = config.find(param_name).asInt32();
@@ -77,7 +65,7 @@ bool pylonDriver::parseUint32Param(std::string param_name, std::uint32_t& param,
         return false;
     }
 }
-bool pylonDriver::parseFloat64Param(std::string param_name, double& param, yarp::os::Searchable& config) {
+bool parseFloat64Param(std::string param_name, double& param, yarp::os::Searchable& config) {
     if (config.check(param_name) && config.find(param_name).isFloat64())
     {
         param = config.find(param_name).asFloat64();
@@ -90,7 +78,7 @@ bool pylonDriver::parseFloat64Param(std::string param_name, double& param, yarp:
     }
 
 }
-bool pylonDriver::parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config) {
+bool parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config) {
     if (config.check(param_name) && config.find(param_name).isFloat64())
     {
         param = config.find(param_name).asFloat64();
@@ -103,16 +91,37 @@ bool pylonDriver::parseStringParam(std::string param_name, std::string& param, y
     }
 }
 
+bool pylonDriver::startCamera() {
+    if (m_camera_ptr)
+    {
+        if (!m_camera_ptr->IsGrabbing())
+        {
+            m_camera_ptr->StartGrabbing();
+        }
+    }
+    return true;
+}
+
+bool pylonDriver::stopCamera() {
+    if (m_camera_ptr)
+    {
+        if (m_camera_ptr->IsGrabbing())
+        {
+            m_camera_ptr->StopGrabbing();
+        }
+    }
+    return true;
+}
 
 bool pylonDriver::open(Searchable& config)
 {
+    bool ok{true};
     yCTrace(PYLON) << "input params are " << config.toString();
     if (!config.check("serial_number"))
     {
         yCError(PYLON)<< "serial_number parameter not specified";
         return false;
     }
-    yCDebug(PYLON)<<"1";
     // TODO understand how to treat it, if string or int
     m_serial_number = config.find("serial_number").toString().c_str();
 
@@ -131,12 +140,10 @@ bool pylonDriver::open(Searchable& config)
     // Get factory singleton
     CTlFactory& factory = CTlFactory::GetInstance();
     yCDebug(PYLON)<<"SERIAL NUMBER!"<<m_serial_number<<config.find("serial_number").asString();
-    yCDebug(PYLON)<<"2"<<m_serial_number;
     // Open the device using the S/N
     try
     {
         m_camera_ptr = std::make_unique<Pylon::CInstantCamera>(factory.CreateDevice(CDeviceInfo().SetSerialNumber(m_serial_number)));
-        yCDebug(PYLON)<<"3";
         if (m_camera_ptr) {
             m_camera_ptr->Open();
             if (!m_camera_ptr->IsOpen()) {
@@ -155,23 +162,22 @@ bool pylonDriver::open(Searchable& config)
         yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened, error:"<<e.GetDescription();
         return false;
     }
-    yCDebug(PYLON)<<"4";
     // TODO get it from conf
 
-    auto& node_map = m_camera_ptr->GetNodeMap();
+    auto& nodemap = m_camera_ptr->GetNodeMap();
     // TODO maybe put in a try catch
-    CBooleanParameter(node_map, "AcquisitionFrameRateEnable").SetValue(true);
-    CBooleanParameter(node_map, "BslScalingEnable").SetValue(true);
-    CIntegerParameter(node_map, "Width").SetValue(m_width);
-    CIntegerParameter(node_map, "Height").SetValue(m_height);
+    CBooleanParameter(nodemap, "AcquisitionFrameRateEnable").SetValue(true);
+    CBooleanParameter(nodemap, "BslScalingEnable").SetValue(true);
+    ok = ok && setRgbResolution(m_width, m_height);
 
-    setFramerate(m_fps);
+    // TODO disabling it for testing the network, probably it is better to keep it as Auto
+    CEnumParameter(nodemap, "ExposureAuto").SetValue("Off");
 
-    yCDebug(PYLON)<<"Starting with this fps"<<CFloatParameter(node_map, "AcquisitionFrameRate").GetValue();
+    ok = ok && setFramerate(m_fps);
 
-    // Configuration is done, let's start grabbing
-    m_camera_ptr->StartGrabbing();
-    return true;
+    yCDebug(PYLON)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
+
+    return ok;
 }
 
 bool pylonDriver::close()
@@ -210,8 +216,27 @@ bool pylonDriver::getRgbResolution(int &width, int &height)
 
 bool pylonDriver::setRgbResolution(int width, int height)
 {
-    // TODO
-    return false;
+    if (width > 0 && height > 0)
+    {
+        stopCamera();
+        try
+        {
+            yCDebug(PYLON)<<"Setting width and height to"<<width<<height;
+            CIntegerParameter(m_camera_ptr->GetNodeMap(), "Width").SetValue(m_width);
+            CIntegerParameter(m_camera_ptr->GetNodeMap(), "Height").SetValue(m_height);
+            m_width = width;
+            m_height = height;
+        }
+        catch (const GenericException &e)
+        {
+            // Error handling.
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set width and height to"<<width<<height<<"error:"<<e.GetDescription();
+            startCamera();
+            return false;
+        }
+
+    }
+    return startCamera();
 }
 
 

@@ -84,7 +84,10 @@ public:
 private:
     //method
     //inline bool setParams();
-    bool        setFramerate(const int _fps);
+    bool setFramerate(const float _fps);
+    bool parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config);
+    bool parseFloat64Param(std::string param_name, double& param, yarp::os::Searchable& config);
+    bool parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config);
 
 
     mutable std::mutex m_mutex;
@@ -93,9 +96,9 @@ private:
     mutable std::string m_lastError{""};
     bool m_verbose{false};
     bool m_initialized{false};
-    int m_fps{30};
-    uint32_t m_height{0};
-    uint32_t m_width{0};
+    float m_fps{30.0};
+    uint32_t m_width{640};
+    uint32_t m_height{480};
     Pylon::String_t m_serial_number{""};
     std::unique_ptr<Pylon::CInstantCamera> m_camera_ptr;
     //Pylon::CGrabResultPtr m_grab_result_ptr;

@@ -34,9 +34,73 @@ pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())
 }
 
 
-bool pylonDriver::setFramerate(const int _fps)
+bool pylonDriver::setFramerate(const float _fps)
 {
+    bool stopped{false};
+    if (m_camera_ptr)
+    {
+        auto& node_map = m_camera_ptr->GetNodeMap();
+        if (m_camera_ptr->IsGrabbing())
+        {
+            m_camera_ptr->StopGrabbing();
+            stopped = true;
+        }
+        try
+        {
+            yCDebug(PYLON)<<"Setting framerate to"<<_fps;
+            CFloatParameter(node_map, "AcquisitionFrameRate").SetValue(_fps);
+        }
+        catch (const GenericException &e)
+        {
+            // Error handling.
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set fps to:"<<_fps<<"error:"<<e.GetDescription();
+            return false;
+        }
+        if (stopped)
+        {
+            m_camera_ptr->StartGrabbing();
+        }
+
+    }
     return true;
+}
+
+bool pylonDriver::parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config) {
+    if (config.check(param_name) && config.find(param_name).isInt32())
+    {
+        param = config.find(param_name).asInt32();
+        return true;
+    }
+    else
+    {
+        yCWarning(PYLON) << param_name << "parameter not specifie, using"<<param;
+        return false;
+    }
+}
+bool pylonDriver::parseFloat64Param(std::string param_name, double& param, yarp::os::Searchable& config) {
+    if (config.check(param_name) && config.find(param_name).isFloat64())
+    {
+        param = config.find(param_name).asFloat64();
+        return true;
+    }
+    else
+    {
+        yCWarning(PYLON) << param_name << "parameter not specified, using"<<param;
+        return false;
+    }
+
+}
+bool pylonDriver::parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config) {
+    if (config.check(param_name) && config.find(param_name).isFloat64())
+    {
+        param = config.find(param_name).asFloat64();
+        return true;
+    }
+    else
+    {
+        yCWarning(PYLON) << param_name << "parameter not specified, using"<<param;
+        return false;
+    }
 }
 
 
@@ -49,7 +113,19 @@ bool pylonDriver::open(Searchable& config)
         return false;
     }
     yCDebug(PYLON)<<"1";
+    // TODO understand how to treat it, if string or int
     m_serial_number = config.find("serial_number").toString().c_str();
+
+    double period{0.03};
+    parseUint32Param("width", m_width, config);
+    parseUint32Param("height", m_height, config);
+    parseFloat64Param("period", period, config);
+
+    if (period != 0.0)
+    {
+        m_fps = 1.0/period; // the fps has to be aligned with the nws period
+    }
+
     // Initialize pylon resources
     PylonInitialize();
     // Get factory singleton
@@ -82,27 +158,29 @@ bool pylonDriver::open(Searchable& config)
     yCDebug(PYLON)<<"4";
     // TODO get it from conf
 
-    GenApi::INodeMap& nodemap = m_camera_ptr->GetNodeMap();
+    auto& node_map = m_camera_ptr->GetNodeMap();
+    // TODO maybe put in a try catch
+    CBooleanParameter(node_map, "AcquisitionFrameRateEnable").SetValue(true);
+    CBooleanParameter(node_map, "BslScalingEnable").SetValue(true);
+    CIntegerParameter(node_map, "Width").SetValue(m_width);
+    CIntegerParameter(node_map, "Height").SetValue(m_height);
 
-    CBooleanParameter(nodemap, "BslScalingEnable").SetValue(true);
-    CIntegerParameter(nodemap, "Width").SetValue(1920);
-    CIntegerParameter(nodemap, "Height").SetValue(1080);
-    // Set the pixel format to RGB 8
-    //CEnumParameter(nodemap, "PixelFormat").SetValue("Mono8");
-    m_width  = 1920;
-    m_height = 1080;
+    setFramerate(m_fps);
+
+    yCDebug(PYLON)<<"Starting with this fps"<<CFloatParameter(node_map, "AcquisitionFrameRate").GetValue();
+
     // Configuration is done, let's start grabbing
     m_camera_ptr->StartGrabbing();
     return true;
 }
 
 bool pylonDriver::close()
-{   
+{
     if (m_camera_ptr->IsPylonDeviceAttached()) {
         m_camera_ptr->DetachDevice();
     }
-    // Releases all pylon resources. 
-    PylonTerminate(); 
+    // Releases all pylon resources.
+    PylonTerminate();
     return true;
 }
 
@@ -247,7 +325,7 @@ bool pylonDriver::setOnePush(int feature)
 
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
-    
+
     //yCDebug(PYLON)<<"GETTIIMAGE";
     if (m_camera_ptr->IsGrabbing())
     {

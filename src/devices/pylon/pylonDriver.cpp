@@ -29,6 +29,22 @@ namespace {
 YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
 }
 
+// VERY IMPORTANT ABOUT WHITE BALANCE: the YARP interfaces cannot allow to set a feature with
+// 3 values, 2 is maximum and until now we always used blue and red in this order. Then we ignore
+// green
+
+static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_BRIGHTNESS,
+                                                                  YARP_FEATURE_EXPOSURE,
+                                                                  YARP_FEATURE_SHARPNESS,
+                                                                  YARP_FEATURE_WHITE_BALANCE,
+                                                                  YARP_FEATURE_GAMMA,
+                                                                  YARP_FEATURE_GAIN,
+                                                                  YARP_FEATURE_TRIGGER, // not sure how to use it
+                                                                  YARP_FEATURE_FRAME_RATE };
+
+static const std::vector<cameraFeature_id_t> features_with_auto { YARP_FEATURE_EXPOSURE,
+                                                                  YARP_FEATURE_GAIN };
+
 pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())
 {
 }
@@ -242,13 +258,14 @@ bool pylonDriver::setRgbResolution(int width, int height)
 
 bool pylonDriver::setRgbFOV(double horizontalFov, double verticalFov)
 {
-    // It seems to be not available...
+    yCWarning(PYLON) << "setRgbFOV not supported";
     return false;
 }
 
 bool pylonDriver::getRgbFOV(double &horizontalFov, double &verticalFov)
 {
-    return true;
+    yCWarning(PYLON) << "getRgbFOV not supported";
+    return false;
 }
 
 bool pylonDriver::getRgbMirroring(bool& mirror)
@@ -265,17 +282,28 @@ bool pylonDriver::setRgbMirroring(bool mirror)
 
 bool pylonDriver::getRgbIntrinsicParam(Property& intrinsic)
 {
-    return true;
+    yCWarning(PYLON) << "getRgbIntrinsicParam not implemented yet";
+    return false;
 }
 
 
 bool pylonDriver::getCameraDescription(CameraDescriptor* camera)
 {
-    return true;
+    yCWarning(PYLON) << "getCameraDescription not implemented yet";
+    return false;
 }
 
 bool pylonDriver::hasFeature(int feature, bool* hasFeature)
 {
+    cameraFeature_id_t f;
+    f = static_cast<cameraFeature_id_t>(feature);
+    if (f < YARP_FEATURE_BRIGHTNESS || f > YARP_FEATURE_NUMBER_OF-1)
+    {
+        return false;
+    }
+
+    *hasFeature = std::find(supported_features.begin(), supported_features.end(), f) != supported_features.end();
+
     return true;
 }
 
@@ -291,19 +319,18 @@ bool pylonDriver::getFeature(int feature, double *value)
 
 bool pylonDriver::setFeature(int feature, double value1, double value2)
 {
-    yCError(PYLON) << "No 2-valued feature are supported";
-    return false;
+    return true;
 }
 
 bool pylonDriver::getFeature(int feature, double *value1, double *value2)
 {
-    yCError(PYLON) << "No 2-valued feature are supported";
-    return false;
+    return true;
 }
 
 bool pylonDriver::hasOnOff(  int feature, bool *HasOnOff)
 {
-    return true;
+    // Not sure
+    return hasAuto(feature, HasOnOff);
 }
 
 bool pylonDriver::setActive( int feature, bool onoff)
@@ -319,12 +346,21 @@ bool pylonDriver::getActive( int feature, bool *isActive)
 
 bool pylonDriver::hasAuto(int feature, bool *hasAuto)
 {
+    cameraFeature_id_t f;
+    f = static_cast<cameraFeature_id_t>(feature);
+    if (f < YARP_FEATURE_BRIGHTNESS || f > YARP_FEATURE_NUMBER_OF-1)
+    {
+        return false;
+    }
+
+    *hasAuto = std::find(features_with_auto.begin(), features_with_auto.end(), f) != features_with_auto.end();
+
     return true;
 }
 
 bool pylonDriver::hasManual( int feature, bool* hasManual)
 {
-    return true;
+    return hasFeature(feature, hasManual);
 }
 
 bool pylonDriver::hasOnePush(int feature, bool* hasOnePush)
@@ -334,8 +370,7 @@ bool pylonDriver::hasOnePush(int feature, bool* hasOnePush)
 
 bool pylonDriver::setMode(int feature, FeatureMode mode)
 {
-    yCError(PYLON) << "Feature does not have both auto and manual mode";
-    return false;
+    return true;
 }
 
 bool pylonDriver::getMode(int feature, FeatureMode* mode)

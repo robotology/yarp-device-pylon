@@ -350,7 +350,7 @@ bool pylonDriver::setOnePush(int feature)
 
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
-
+    std::lock_guard<std::mutex> guard(m_mutex);
     //yCDebug(PYLON)<<"GETTIIMAGE";
     if (m_camera_ptr->IsGrabbing())
     {
@@ -365,13 +365,15 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
         //     return true;
         // }
         // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-        m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
 
+        m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
         // Image grabbed successfully?
         if (grab_result_ptr && grab_result_ptr->GrabSucceeded())
         {
             m_width  = grab_result_ptr->GetWidth();
             m_height = grab_result_ptr->GetHeight();
+            size_t mem_to_wrt = m_width * m_height * image.getPixelSize();
+
             // TODO Check pixel code
             image.resize(m_width, m_height);
 
@@ -380,9 +382,7 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
             // yCDebug(PYLON)<<"image size"<<grab_result_ptr->GetImageSize();
             // yCDebug(PYLON)<<"payload size"<<grab_result_ptr->GetPayloadSize();
             // yCDebug(PYLON)<<"pixel type is "<<CPixelTypeMapper::GetNameByPixelType(grab_result_ptr->GetPixelType());
-
             pylon_format_converter.Convert(pylon_image, grab_result_ptr);
-
             if (!pylon_image.IsValid()) {
                  yCError(PYLON)<<"Frame invalid!";
                  return false;
@@ -398,7 +398,7 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
                 first_acquisition = false;
                 return false;
             }
-            image.setExternal(pylon_image.GetBuffer(), m_width, m_height);
+            memcpy((void*)image.getRawImage(), pylon_image.GetBuffer(), mem_to_wrt);
         }
         else {
             yCError(PYLON)<<"Acquisition failed";

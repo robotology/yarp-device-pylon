@@ -43,6 +43,7 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_FRAME_RATE };
 
 static const std::vector<cameraFeature_id_t> features_with_auto { YARP_FEATURE_EXPOSURE,
+                                                                  YARP_FEATURE_WHITE_BALANCE,
                                                                   YARP_FEATURE_GAIN };
 
 pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())

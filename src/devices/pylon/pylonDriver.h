@@ -150,10 +150,10 @@ private:
             }
             else if constexpr (std::is_same<T, std::string>::value) {
                 if (isEnum) {
-                    value = Pylon::CEnumParameter(node_map, option.c_str()).GetValue(value.c_str());
+                    value = Pylon::CEnumParameter(node_map, option.c_str()).GetValue();
                 }
                 else {
-                    value = Pylon::CStringParameter(node_map, option.c_str()).GetValue(value.c_str());
+                    value = Pylon::CStringParameter(node_map, option.c_str()).GetValue();
                 }
             }
         }

@@ -41,7 +41,7 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_FRAME_RATE };
 
 static const std::vector<cameraFeature_id_t> features_with_auto { YARP_FEATURE_EXPOSURE,
-                                                                  YARP_FEATURE_WHITE_BALANCE,
+                                                                  //YARP_FEATURE_WHITE_BALANCE, // it seems that it cannot be set to auto
                                                                   YARP_FEATURE_GAIN };
 
 
@@ -401,19 +401,80 @@ bool pylonDriver::getFeature(int feature, double *value1, double *value2)
 
 bool pylonDriver::hasOnOff(  int feature, bool *HasOnOff)
 {
-    // Not sure
     return hasAuto(feature, HasOnOff);
 }
 
 bool pylonDriver::setActive( int feature, bool onoff)
 {
+    bool b = false;
+    if (!hasFeature(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
 
-    return true;
+    if (!hasOnOff(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        return false;
+    }
+
+    std::string val_to_set = onoff ? "Continuous" : "Off";
+
+    switch(feature)
+    {
+    case YARP_FEATURE_EXPOSURE:
+        b = setOption("ExposureAuto", val_to_set, true);
+        break;
+    case YARP_FEATURE_GAIN:
+        b = setOption("GainAuto", val_to_set, true);
+        break;
+    default:
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+
+    return b;
 }
 
 bool pylonDriver::getActive( int feature, bool *isActive)
 {
-    return true;
+    bool b = false;
+    if (!hasFeature(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+
+    if (!hasOnOff(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        return false;
+    }
+
+    std::string val_to_get{""};
+
+    switch(feature)
+    {
+    case YARP_FEATURE_EXPOSURE:
+        b = getOption("ExposureAuto", val_to_get, true);
+        break;
+    case YARP_FEATURE_GAIN:
+        b = getOption("GainAuto", val_to_get, true);
+        break;
+    default:
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+    if (b) {
+        if (val_to_get == "Continous") {
+            *isActive = true;
+        }
+        else if (val_to_get == "Off") {
+            *isActive = false;
+        }
+    }
+    return b;
 }
 
 bool pylonDriver::hasAuto(int feature, bool *hasAuto)
@@ -442,17 +503,62 @@ bool pylonDriver::hasOnePush(int feature, bool* hasOnePush)
 
 bool pylonDriver::setMode(int feature, FeatureMode mode)
 {
-    return true;
+    bool b {false};
+    if (!hasAuto(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+
+    switch(mode)
+    {
+    case MODE_AUTO:
+        return setActive(feature, true);
+    case MODE_MANUAL:
+        return setActive(feature, false);
+    case MODE_UNKNOWN:
+        return false;
+    default:
+        return false;
+    }
+    return b;
 }
 
 bool pylonDriver::getMode(int feature, FeatureMode* mode)
 {
-    return true;
+    bool b {false};
+    if (!hasAuto(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+    bool get_active{false};
+    b = b && getActive(feature, &get_active);
+
+    if (b) {
+        if (get_active) {
+            *mode = MODE_AUTO;
+        }
+        else {
+            *mode = MODE_MANUAL;
+        }
+    }
+    return b;
 }
 
 bool pylonDriver::setOnePush(int feature)
 {
-    return true;
+    bool b = false;
+    if (!hasOnePush(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature doesn't have OnePush";
+        return false;
+    }
+
+    b = b && setMode(feature, MODE_AUTO);
+    b = b && setMode(feature, MODE_MANUAL);
+
+    return b;
 }
 
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)

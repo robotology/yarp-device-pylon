@@ -323,12 +323,7 @@ bool pylonDriver::setFeature(int feature, double value)
         return false;
     }
 
-    if (!b) {
-        yCError(PYLON) << "Something went wrong setting the requested feature";
-        return false;
-    }
-
-    return true;
+    return b;
 }
 
 bool pylonDriver::getFeature(int feature, double *value)
@@ -371,22 +366,37 @@ bool pylonDriver::getFeature(int feature, double *value)
         return false;
     }
 
-    if (!b) {
-        yCError(PYLON) << "Something went wrong getting the requested feature";
-        return false;
-    }
-
-    return true;
+    return b;
 }
 
 bool pylonDriver::setFeature(int feature, double value1, double value2)
 {
-    return true;
+    auto f = static_cast<cameraFeature_id_t>(feature);
+    if (f != YARP_FEATURE_WHITE_BALANCE) {
+        yCError(PYLON)<<"This is not a 2-values feature supported";
+        return false;
+    }
+
+    auto res = setOption("BalanceRatioSelector", "Blue", true);
+    res = res && setOption("BalanceRatio", value1);
+    res = res && setOption("BalanceRatioSelector", "Red", true);
+    res = res && setOption("BalanceRatio", value2);
+    return res;
 }
 
 bool pylonDriver::getFeature(int feature, double *value1, double *value2)
 {
-    return true;
+    auto f = static_cast<cameraFeature_id_t>(feature);
+    if (f != YARP_FEATURE_WHITE_BALANCE) {
+        yCError(PYLON)<<"This is not a 2-values feature supported";
+        return false;
+    }
+
+    auto res = setOption("BalanceRatioSelector", "Blue", true);
+    res = res && getOption("BalanceRatio", value1);
+    res = res && setOption("BalanceRatioSelector", "Red", true);
+    res = res && getOption("BalanceRatio", value2);
+    return res;
 }
 
 bool pylonDriver::hasOnOff(  int feature, bool *HasOnOff)

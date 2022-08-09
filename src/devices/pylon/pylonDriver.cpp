@@ -172,7 +172,7 @@ bool pylonDriver::open(Searchable& config)
     ok = ok && setRgbResolution(m_width, m_height);
 
     // TODO disabling it for testing the network, probably it is better to keep it as Auto
-    CEnumParameter(nodemap, "ExposureAuto").SetValue("Off");
+    ok = ok && setOption("ExposureAuto", "Off", true);
 
     ok = ok && setFramerate(m_fps);
 
@@ -333,6 +333,49 @@ bool pylonDriver::setFeature(int feature, double value)
 
 bool pylonDriver::getFeature(int feature, double *value)
 {
+    bool b = false;
+    if (!hasFeature(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+    b = false;
+    auto f = static_cast<cameraFeature_id_t>(feature);
+    switch(f)
+    {
+    case YARP_FEATURE_BRIGHTNESS:
+        b = getOption("BslBrightness", value);
+        break;
+    case YARP_FEATURE_EXPOSURE:
+        b = getOption("ExposureTime", value);
+        break;
+    case YARP_FEATURE_SHARPNESS:
+        b = getOption("BslSharpnessEnhancement", value);
+        break;
+    case YARP_FEATURE_WHITE_BALANCE:
+        b = false;
+        yCError(PYLON)<<"White balance is a 2-values feature";
+        break;
+    case YARP_FEATURE_GAMMA:
+        b = getOption("Gamma", value);
+        break;
+    case YARP_FEATURE_GAIN:
+        b = getOption("Gain", value);
+        break;
+    case YARP_FEATURE_FRAME_RATE:
+        b = true;
+        *value = m_fps;
+        break;
+    default:
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+
+    if (!b) {
+        yCError(PYLON) << "Something went wrong getting the requested feature";
+        return false;
+    }
+
     return true;
 }
 

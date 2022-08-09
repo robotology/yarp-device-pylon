@@ -132,6 +132,41 @@ private:
         return startCamera();
 
     }
+
+    template <class T>
+    bool getOption(const std::string& option, T& value, bool isEnum=false) {
+        auto& node_map = m_camera_ptr->GetNodeMap();
+        try
+        {
+            yCDebug(PYLON)<<"Setting "<<option<<"to"<<value;
+            if constexpr (std::is_same<T,float>::value || std::is_same<T,double>::value) {
+                value = Pylon::CFloatParameter(node_map, option.c_str()).GetValue();
+            }
+            else if constexpr (std::is_same<T, bool>::value) {
+                value = Pylon::CBooleanParameter(node_map, option.c_str()).GetValue();
+            }
+            else if constexpr (std::is_same<T, int>::value) {
+                value = Pylon::CIntegerParameter(node_map, option.c_str()).GetValue();
+            }
+            else if constexpr (std::is_same<T, std::string>::value) {
+                if (isEnum) {
+                    value = Pylon::CEnumParameter(node_map, option.c_str()).GetValue(value.c_str());
+                }
+                else {
+                    value = Pylon::CStringParameter(node_map, option.c_str()).GetValue(value.c_str());
+                }
+            }
+        }
+        catch (const Pylon::GenericException &e)
+        {
+            // Error handling.
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot get"<<option<<"error:"<<e.GetDescription();
+            return false;
+        }
+        return true;
+
+    }
+
     bool startCamera();
     bool stopCamera();
 

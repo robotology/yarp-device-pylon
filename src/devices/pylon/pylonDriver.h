@@ -33,6 +33,11 @@
  *
  * Documentation to be added
  */
+
+namespace {
+YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
+}
+
 class pylonDriver :
         public yarp::dev::DeviceDriver,
         public yarp::dev::IFrameGrabberControls,
@@ -46,7 +51,7 @@ private:
 
 
 public:
-    pylonDriver();
+    pylonDriver() = default;
     ~pylonDriver() override = default;
 
     // DeviceDriver
@@ -92,6 +97,41 @@ private:
     //method
     //inline bool setParams();
     bool setFramerate(const float _fps);
+    // TODO check if it is the case of stopping and starting grabbing everytime
+    template <class T>
+    bool setOption(const std::string& option, T value, bool isEnum=false) {
+        auto& node_map = m_camera_ptr->GetNodeMap();
+        stopCamera();
+        try
+        {
+            yCDebug(PYLON)<<"Setting "<<option<<"to"<<value;
+            if constexpr (std::is_same<T,float>::value || std::is_same<T,double>::value) {
+                Pylon::CFloatParameter(node_map, option.c_str()).SetValue(value);
+            }
+            else if constexpr (std::is_same<T, bool>::value) {
+                Pylon::CBooleanParameter(node_map, option.c_str()).SetValue(value);
+            }
+            else if constexpr (std::is_same<T, int>::value) {
+                Pylon::CIntegerParameter(node_map, option.c_str()).SetValue(value);
+            }
+            else if constexpr (std::is_same<T, std::string>::value) {
+                if (isEnum) {
+                    Pylon::CEnumParameter(node_map, option.c_str()).SetValue(value.c_str());
+                }
+                else {
+                    Pylon::CStringParameter(node_map, option.c_str()).SetValue(value.c_str());
+                }
+            }
+        }
+        catch (const Pylon::GenericException &e)
+        {
+            // Error handling.
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set"<<option<<"to:"<<value<<"error:"<<e.GetDescription();
+            return false;
+        }
+        return startCamera();
+
+    }
     bool startCamera();
     bool stopCamera();
 
@@ -107,6 +147,5 @@ private:
     uint32_t m_height{480};
     Pylon::String_t m_serial_number{""};
     std::unique_ptr<Pylon::CInstantCamera> m_camera_ptr;
-    //Pylon::CGrabResultPtr m_grab_result_ptr;
 };
 #endif // PYLON_DRIVER_H

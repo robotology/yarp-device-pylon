@@ -25,9 +25,7 @@ using namespace Pylon;
 
 using namespace std;
 
-namespace {
-YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
-}
+
 
 // VERY IMPORTANT ABOUT WHITE BALANCE: the YARP interfaces cannot allow to set a feature with
 // 3 values, 2 is maximum and until now we always used blue and red in this order. Then we ignore
@@ -39,35 +37,21 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_WHITE_BALANCE,
                                                                   YARP_FEATURE_GAMMA,
                                                                   YARP_FEATURE_GAIN,
-                                                                  YARP_FEATURE_TRIGGER, // not sure how to use it
+                                                                  //YARP_FEATURE_TRIGGER, // not sure how to use it
                                                                   YARP_FEATURE_FRAME_RATE };
 
 static const std::vector<cameraFeature_id_t> features_with_auto { YARP_FEATURE_EXPOSURE,
                                                                   YARP_FEATURE_WHITE_BALANCE,
                                                                   YARP_FEATURE_GAIN };
 
-pylonDriver::pylonDriver() //: m_factory(CTlFactory::GetInstance())
-{
-}
-
 
 bool pylonDriver::setFramerate(const float _fps)
 {
-    auto& node_map = m_camera_ptr->GetNodeMap();
-    stopCamera();
-    try
-    {
-        yCDebug(PYLON)<<"Setting framerate to"<<_fps;
-        CFloatParameter(node_map, "AcquisitionFrameRate").SetValue(_fps);
-        m_fps = _fps;
+    auto res = setOption("AcquisitionFrameRate",_fps);
+    if (res) {
+        m_fps =_fps;
     }
-    catch (const GenericException &e)
-    {
-        // Error handling.
-        yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set fps to:"<<_fps<<"error:"<<e.GetDescription();
-        return false;
-    }
-    return startCamera();
+    return res;
 }
 
 bool parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Searchable& config) {
@@ -183,8 +167,8 @@ bool pylonDriver::open(Searchable& config)
 
     auto& nodemap = m_camera_ptr->GetNodeMap();
     // TODO maybe put in a try catch
-    CBooleanParameter(nodemap, "AcquisitionFrameRateEnable").SetValue(true);
-    CBooleanParameter(nodemap, "BslScalingEnable").SetValue(true);
+    ok = ok && setOption("AcquisitionFrameRateEnable", true);
+    ok = ok && setOption("BslScalingEnable", true);
     ok = ok && setRgbResolution(m_width, m_height);
 
     // TODO disabling it for testing the network, probably it is better to keep it as Auto
@@ -233,27 +217,17 @@ bool pylonDriver::getRgbResolution(int &width, int &height)
 
 bool pylonDriver::setRgbResolution(int width, int height)
 {
+    bool res = false;
     if (width > 0 && height > 0)
     {
-        stopCamera();
-        try
-        {
-            yCDebug(PYLON)<<"Setting width and height to"<<width<<height;
-            CIntegerParameter(m_camera_ptr->GetNodeMap(), "Width").SetValue(m_width);
-            CIntegerParameter(m_camera_ptr->GetNodeMap(), "Height").SetValue(m_height);
+        res = setOption("Width", width);
+        res = res && setOption("Height", height);
+        if (res) {
             m_width = width;
             m_height = height;
         }
-        catch (const GenericException &e)
-        {
-            // Error handling.
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set width and height to"<<width<<height<<"error:"<<e.GetDescription();
-            startCamera();
-            return false;
-        }
-
     }
-    return startCamera();
+    return res;
 }
 
 
@@ -310,6 +284,50 @@ bool pylonDriver::hasFeature(int feature, bool* hasFeature)
 
 bool pylonDriver::setFeature(int feature, double value)
 {
+    bool b = false;
+    if (!hasFeature(feature, &b) || !b)
+    {
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+    b = false;
+    auto f = static_cast<cameraFeature_id_t>(feature);
+    switch(f)
+    {
+    case YARP_FEATURE_BRIGHTNESS:
+        b = setOption("BslBrightness", value);
+        break;
+    case YARP_FEATURE_EXPOSURE:
+        // According to https://www.kernel.org/doc/html/v4.8/media/uapi/v4l/extended-controls.html
+        // 1 unit = 100us, basler instead accept us. Setting directly in us.
+        b = setOption("ExposureTime", value);
+        break;
+    case YARP_FEATURE_SHARPNESS:
+        b = setOption("BslSharpnessEnhancement", value);
+        break;
+    case YARP_FEATURE_WHITE_BALANCE:
+        b = false;
+        yCError(PYLON)<<"White balance require 2 values";
+        break;
+    case YARP_FEATURE_GAMMA:
+        b = setOption("Gamma", value);
+        break;
+    case YARP_FEATURE_GAIN:
+        b = setOption("Gain", value);
+        break;
+    case YARP_FEATURE_FRAME_RATE:
+        b = setFramerate(value);
+        break;
+    default:
+        yCError(PYLON) << "Feature not supported!";
+        return false;
+    }
+
+    if (!b) {
+        yCError(PYLON) << "Something went wrong setting the requested feature";
+        return false;
+    }
+
     return true;
 }
 

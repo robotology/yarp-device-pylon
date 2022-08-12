@@ -14,6 +14,7 @@
 #include <map>
 #include <mutex>
 #include <memory>
+#include <typeinfo>
 
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/IFrameGrabberControls.h>
@@ -97,9 +98,12 @@ private:
     //method
     //inline bool setParams();
     bool setFramerate(const float _fps);
-    // TODO check if it is the case of stopping and starting grabbing everytime
     template <class T>
     bool setOption(const std::string& option, T value, bool isEnum=false) {
+        std::lock_guard<std::mutex> guard(m_mutex);
+        // in some cases it is not used, suppressing the warning
+        YARP_UNUSED(isEnum);
+        bool ok{true};
         auto& node_map = m_camera_ptr->GetNodeMap();
         stopCamera();
         try
@@ -127,26 +131,30 @@ private:
         {
             // Error handling.
             yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set"<<option<<"to:"<<value<<"error:"<<e.GetDescription();
-            return false;
+            ok = false;
         }
-        return startCamera();
+        return startCamera() && ok;
 
     }
 
     template <class T>
     bool getOption(const std::string& option, T& value, bool isEnum=false) {
         auto& node_map = m_camera_ptr->GetNodeMap();
+        // in some cases it is not used, suppressing the warning
+        YARP_UNUSED(isEnum);
         try
         {
-            yCDebug(PYLON)<<"Setting "<<option<<"to"<<value;
-            if constexpr (std::is_same<T,float>::value || std::is_same<T,double>::value) {
-                value = Pylon::CFloatParameter(node_map, option.c_str()).GetValue();
+            if constexpr (std::is_same<T,float*>::value || std::is_same<T,double*>::value) {
+                *value = Pylon::CFloatParameter(node_map, option.c_str()).GetValue();
+                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
             }
-            else if constexpr (std::is_same<T, bool>::value) {
-                value = Pylon::CBooleanParameter(node_map, option.c_str()).GetValue();
+            else if constexpr (std::is_same<T, bool*>::value) {
+                *value = Pylon::CBooleanParameter(node_map, option.c_str()).GetValue();
+                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
             }
-            else if constexpr (std::is_same<T, int>::value) {
-                value = Pylon::CIntegerParameter(node_map, option.c_str()).GetValue();
+            else if constexpr (std::is_same<T, int*>::value) {
+                *value = Pylon::CIntegerParameter(node_map, option.c_str()).GetValue();
+                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
             }
             else if constexpr (std::is_same<T, std::string>::value) {
                 if (isEnum) {

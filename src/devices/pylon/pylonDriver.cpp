@@ -41,8 +41,26 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_FRAME_RATE };
 
 static const std::vector<cameraFeature_id_t> features_with_auto { YARP_FEATURE_EXPOSURE,
-                                                                  //YARP_FEATURE_WHITE_BALANCE, // it seems that it cannot be set to auto
+                                                                  YARP_FEATURE_WHITE_BALANCE,
                                                                   YARP_FEATURE_GAIN };
+
+// Values taken from the balser documentation for da4200-30mci
+static const std::map<cameraFeature_id_t, std::pair<double,double>> featureMinMax { {YARP_FEATURE_BRIGHTNESS, {-1.0, 1.0}},
+                                                                                    {YARP_FEATURE_EXPOSURE, {68.0, 2300000.0}},
+                                                                                    {YARP_FEATURE_SHARPNESS, {0.0, 1.0}},
+                                                                                    {YARP_FEATURE_WHITE_BALANCE, {1.0, 8.0}}, // not sure about it, the doc is not clear, found empirically
+                                                                                    {YARP_FEATURE_GAMMA, {0.0, 4.0}},
+                                                                                    {YARP_FEATURE_GAIN, {0.0, 33.06}} };
+
+// We usually set the features through a range between 0 an 1, we have to translate it in meaninful value for the camera
+double fromZeroOneToRange(cameraFeature_id_t feature, double value){
+    return value * (featureMinMax.at(feature).second - featureMinMax.at(feature).first) + featureMinMax.at(feature).first;
+}
+
+// We want the features in the range 0 1
+double fromRangeToZeroOne(cameraFeature_id_t feature, double value){
+    return (value - featureMinMax.at(feature).first) / (featureMinMax.at(feature).second - featureMinMax.at(feature).first);
+}
 
 
 bool pylonDriver::setFramerate(const float _fps)
@@ -178,7 +196,7 @@ bool pylonDriver::open(Searchable& config)
 
     yCDebug(PYLON)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
 
-    return ok;
+    return startCamera();
 }
 
 bool pylonDriver::close()
@@ -295,25 +313,25 @@ bool pylonDriver::setFeature(int feature, double value)
     switch(f)
     {
     case YARP_FEATURE_BRIGHTNESS:
-        b = setOption("BslBrightness", value);
+        b = setOption("BslBrightness", fromZeroOneToRange(f, value));
         break;
     case YARP_FEATURE_EXPOSURE:
         // According to https://www.kernel.org/doc/html/v4.8/media/uapi/v4l/extended-controls.html
         // 1 unit = 100us, basler instead accept us. Setting directly in us.
-        b = setOption("ExposureTime", value);
+        b = setOption("ExposureTime", fromZeroOneToRange(f, value));
         break;
     case YARP_FEATURE_SHARPNESS:
-        b = setOption("BslSharpnessEnhancement", value);
+        b = setOption("BslSharpnessEnhancement", fromZeroOneToRange(f, value));
         break;
     case YARP_FEATURE_WHITE_BALANCE:
         b = false;
         yCError(PYLON)<<"White balance require 2 values";
         break;
     case YARP_FEATURE_GAMMA:
-        b = setOption("Gamma", value);
+        b = setOption("Gamma", fromZeroOneToRange(f, value));
         break;
     case YARP_FEATURE_GAIN:
-        b = setOption("Gain", value);
+        b = setOption("Gain", fromZeroOneToRange(f, value));
         break;
     case YARP_FEATURE_FRAME_RATE:
         b = setFramerate(value);
@@ -366,6 +384,8 @@ bool pylonDriver::getFeature(int feature, double *value)
         return false;
     }
 
+    *value = fromRangeToZeroOne(f,*value);
+    yCDebug(PYLON)<<"In 0-1"<<*value;
     return b;
 }
 
@@ -373,14 +393,14 @@ bool pylonDriver::setFeature(int feature, double value1, double value2)
 {
     auto f = static_cast<cameraFeature_id_t>(feature);
     if (f != YARP_FEATURE_WHITE_BALANCE) {
-        yCError(PYLON)<<"This is not a 2-values feature supported";
+        yCError(PYLON)<<YARP_FEATURE_WHITE_BALANCE<<"is not a 2-values feature supported";
         return false;
     }
 
     auto res = setOption("BalanceRatioSelector", "Blue", true);
-    res = res && setOption("BalanceRatio", value1);
+    res = res && setOption("BalanceRatio", fromZeroOneToRange(f, value1));
     res = res && setOption("BalanceRatioSelector", "Red", true);
-    res = res && setOption("BalanceRatio", value2);
+    res = res && setOption("BalanceRatio", fromZeroOneToRange(f, value2));
     return res;
 }
 
@@ -396,6 +416,10 @@ bool pylonDriver::getFeature(int feature, double *value1, double *value2)
     res = res && getOption("BalanceRatio", value1);
     res = res && setOption("BalanceRatioSelector", "Red", true);
     res = res && getOption("BalanceRatio", value2);
+    *value1 = fromRangeToZeroOne(f,*value1);
+    *value2 = fromRangeToZeroOne(f,*value2);
+    yCDebug(PYLON)<<"In 0-1"<<*value1;
+    yCDebug(PYLON)<<"In 0-1"<<*value2;
     return res;
 }
 
@@ -409,13 +433,13 @@ bool pylonDriver::setActive( int feature, bool onoff)
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
     if (!hasOnOff(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        yCError(PYLON) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
         return false;
     }
 
@@ -426,11 +450,14 @@ bool pylonDriver::setActive( int feature, bool onoff)
     case YARP_FEATURE_EXPOSURE:
         b = setOption("ExposureAuto", val_to_set, true);
         break;
+    case YARP_FEATURE_WHITE_BALANCE:
+        b = setOption("BalanceWhiteAuto", val_to_set, true);
+        break;
     case YARP_FEATURE_GAIN:
         b = setOption("GainAuto", val_to_set, true);
         break;
     default:
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
@@ -442,13 +469,13 @@ bool pylonDriver::getActive( int feature, bool *isActive)
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON)<< "Feature"<<feature<<"not supported!";
         return false;
     }
 
     if (!hasOnOff(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        yCError(PYLON) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
         return false;
     }
 
@@ -459,15 +486,18 @@ bool pylonDriver::getActive( int feature, bool *isActive)
     case YARP_FEATURE_EXPOSURE:
         b = getOption("ExposureAuto", val_to_get, true);
         break;
+    case YARP_FEATURE_WHITE_BALANCE:
+        b = getOption("BalanceWhiteAuto", val_to_get, true);
+        break;
     case YARP_FEATURE_GAIN:
         b = getOption("GainAuto", val_to_get, true);
         break;
     default:
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON)<<"Feature"<<feature<<"not supported!";
         return false;
     }
     if (b) {
-        if (val_to_get == "Continous") {
+        if (val_to_get == "Continuous") {
             *isActive = true;
         }
         else if (val_to_get == "Off") {
@@ -506,7 +536,7 @@ bool pylonDriver::setMode(int feature, FeatureMode mode)
     bool b {false};
     if (!hasAuto(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
@@ -529,7 +559,7 @@ bool pylonDriver::getMode(int feature, FeatureMode* mode)
     bool b {false};
     if (!hasAuto(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON) << "Feature"<<feature<<"not supported!";
         return false;
     }
     bool get_active{false};
@@ -551,7 +581,7 @@ bool pylonDriver::setOnePush(int feature)
     bool b = false;
     if (!hasOnePush(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature doesn't have OnePush";
+        yCError(PYLON) << "Feature"<<feature<<"doesn't have OnePush";
         return false;
     }
 
@@ -564,22 +594,23 @@ bool pylonDriver::setOnePush(int feature)
 bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
-    //yCDebug(PYLON)<<"GETTIIMAGE";
     if (m_camera_ptr->IsGrabbing())
     {
         CGrabResultPtr grab_result_ptr;
         CPylonImage pylon_image;
         CImageFormatConverter pylon_format_converter;
         pylon_format_converter.OutputPixelFormat = PixelType_RGB8packed;
-        // if(first_acquisition){
-        //     yCDebug(PYLON)<<"Discard first frame";
-        //     first_acquisition = false;
-        //     m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
-        //     return true;
-        // }
         // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
-
-        m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
+        // TODO change the hardcoded 5000 to the exposure time.
+        try {
+            m_camera_ptr->RetrieveResult( 5000, grab_result_ptr, TimeoutHandling_ThrowException);
+        }
+        catch (const Pylon::GenericException &e)
+        {
+            // Error handling.
+            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot get images error:"<<e.GetDescription();
+            return false;
+        }
         // Image grabbed successfully?
         if (grab_result_ptr && grab_result_ptr->GrabSucceeded())
         {
@@ -589,21 +620,11 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 
             // TODO Check pixel code
             image.resize(m_width, m_height);
-
-            // yCDebug(PYLON)<<"padding x"<<grab_result_ptr->GetPaddingX();
-            // yCDebug(PYLON)<<"padding y"<<grab_result_ptr->GetPaddingY();
-            // yCDebug(PYLON)<<"image size"<<grab_result_ptr->GetImageSize();
-            // yCDebug(PYLON)<<"payload size"<<grab_result_ptr->GetPayloadSize();
-            // yCDebug(PYLON)<<"pixel type is "<<CPixelTypeMapper::GetNameByPixelType(grab_result_ptr->GetPixelType());
             pylon_format_converter.Convert(pylon_image, grab_result_ptr);
             if (!pylon_image.IsValid()) {
                  yCError(PYLON)<<"Frame invalid!";
                  return false;
             }
-
-            // Access the image data.
-            //yCDebug(PYLON) << "SizeX:" << grab_result_ptr->GetWidth();
-            //yCDebug(PYLON) << "SizeY:" << grab_result_ptr->GetHeight();
             // For some reason the first frame cannot be converted To be investigated
             static bool first_acquisition{true};
             if (first_acquisition) {

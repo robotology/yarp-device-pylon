@@ -164,10 +164,16 @@ private:
             else if constexpr (std::is_same<T, std::string>::value) {
                 if (isEnum) {
                     value = Pylon::CEnumParameter(node_map, option.c_str()).GetValue();
+                    yCDebug(PYLON_CAMERA)<<"Getting"<<option<<"value:"<<value;
                 }
                 else {
                     value = Pylon::CStringParameter(node_map, option.c_str()).GetValue();
+                    yCDebug(PYLON_CAMERA)<<"Getting"<<option<<"value:"<<value;
                 }
+            }
+            else {
+                yCError(PYLON_CAMERA)<<"Option"<<option<<"has a type not supported, type"<<typeid(T).name();
+                return false;
             }
         }
         catch (const Pylon::GenericException &e)

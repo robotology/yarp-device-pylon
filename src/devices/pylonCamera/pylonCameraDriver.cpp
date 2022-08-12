@@ -35,7 +35,7 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_EXPOSURE,
                                                                   YARP_FEATURE_SHARPNESS,
                                                                   YARP_FEATURE_WHITE_BALANCE,
-                                                                  YARP_FEATURE_GAMMA,
+                                                                  YARP_FEATURE_GAMMA, // it seems not writable
                                                                   YARP_FEATURE_GAIN,
                                                                   //YARP_FEATURE_TRIGGER, // not sure how to use it
                                                                   YARP_FEATURE_FRAME_RATE };
@@ -328,7 +328,9 @@ bool pylonCameraDriver::setFeature(int feature, double value)
         yCError(PYLON_CAMERA)<<"White balance require 2 values";
         break;
     case YARP_FEATURE_GAMMA:
-        b = setOption("Gamma", fromZeroOneToRange(f, value));
+        //b = setOption("Gamma", fromZeroOneToRange(f, value));
+        yCError(PYLON_CAMERA)<<"Gamma is not writable";
+        b = false;
         break;
     case YARP_FEATURE_GAIN:
         b = setOption("Gain", fromZeroOneToRange(f, value));
@@ -448,13 +450,13 @@ bool pylonCameraDriver::setActive( int feature, bool onoff)
     switch(feature)
     {
     case YARP_FEATURE_EXPOSURE:
-        b = setOption("ExposureAuto", val_to_set, true);
+        b = setOption("ExposureAuto", val_to_set.c_str(), true);
         break;
     case YARP_FEATURE_WHITE_BALANCE:
-        b = setOption("BalanceWhiteAuto", val_to_set, true);
+        b = setOption("BalanceWhiteAuto", val_to_set.c_str(), true);
         break;
     case YARP_FEATURE_GAIN:
-        b = setOption("GainAuto", val_to_set, true);
+        b = setOption("GainAuto", val_to_set.c_str(), true);
         break;
     default:
         yCError(PYLON_CAMERA) << "Feature"<<feature<<"not supported!";

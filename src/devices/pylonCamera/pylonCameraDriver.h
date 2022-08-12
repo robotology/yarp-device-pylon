@@ -118,13 +118,18 @@ private:
             else if constexpr (std::is_same<T, int>::value) {
                 Pylon::CIntegerParameter(node_map, option.c_str()).SetValue(value);
             }
-            else if constexpr (std::is_same<T, std::string>::value) {
+            else if constexpr (std::is_same<T, const char*>::value) {
                 if (isEnum) {
-                    Pylon::CEnumParameter(node_map, option.c_str()).SetValue(value.c_str());
+                    Pylon::CEnumParameter(node_map, option.c_str()).SetValue(value);
                 }
                 else {
-                    Pylon::CStringParameter(node_map, option.c_str()).SetValue(value.c_str());
+                    Pylon::CStringParameter(node_map, option.c_str()).SetValue(value);
                 }
+            }
+            else {
+                yCError(PYLON_CAMERA)<<"Option"<<option<<"has a type not supported, type"<<typeid(T).name();
+                startCamera();
+                return false;
             }
         }
         catch (const Pylon::GenericException &e)

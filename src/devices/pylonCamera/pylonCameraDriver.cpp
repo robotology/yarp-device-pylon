@@ -35,7 +35,7 @@ static const std::vector<cameraFeature_id_t> supported_features { YARP_FEATURE_B
                                                                   YARP_FEATURE_EXPOSURE,
                                                                   YARP_FEATURE_SHARPNESS,
                                                                   YARP_FEATURE_WHITE_BALANCE,
-                                                                  YARP_FEATURE_GAMMA, // it seems not writable
+                                                                  // YARP_FEATURE_GAMMA, // it seems not writable
                                                                   YARP_FEATURE_GAIN,
                                                                   //YARP_FEATURE_TRIGGER, // not sure how to use it
                                                                   YARP_FEATURE_FRAME_RATE };
@@ -49,7 +49,7 @@ static const std::map<cameraFeature_id_t, std::pair<double,double>> featureMinMa
                                                                                     {YARP_FEATURE_EXPOSURE, {68.0, 2300000.0}},
                                                                                     {YARP_FEATURE_SHARPNESS, {0.0, 1.0}},
                                                                                     {YARP_FEATURE_WHITE_BALANCE, {1.0, 8.0}}, // not sure about it, the doc is not clear, found empirically
-                                                                                    {YARP_FEATURE_GAMMA, {0.0, 4.0}},
+                                                                                    //{YARP_FEATURE_GAMMA, {0.0, 4.0}},
                                                                                     {YARP_FEATURE_GAIN, {0.0, 33.06}} };
 
 // We usually set the features through a range between 0 an 1, we have to translate it in meaninful value for the camera
@@ -327,11 +327,6 @@ bool pylonCameraDriver::setFeature(int feature, double value)
         b = false;
         yCError(PYLON_CAMERA)<<"White balance require 2 values";
         break;
-    case YARP_FEATURE_GAMMA:
-        //b = setOption("Gamma", fromZeroOneToRange(f, value));
-        yCError(PYLON_CAMERA)<<"Gamma is not writable";
-        b = false;
-        break;
     case YARP_FEATURE_GAIN:
         b = setOption("Gain", fromZeroOneToRange(f, value));
         break;
@@ -370,9 +365,6 @@ bool pylonCameraDriver::getFeature(int feature, double *value)
     case YARP_FEATURE_WHITE_BALANCE:
         b = false;
         yCError(PYLON_CAMERA)<<"White balance is a 2-values feature";
-        break;
-    case YARP_FEATURE_GAMMA:
-        b = getOption("Gamma", value);
         break;
     case YARP_FEATURE_GAIN:
         b = getOption("Gain", value);

@@ -25,7 +25,14 @@
 #include <yarp/os/Stamp.h>
 #include <pylon/PylonIncludes.h>
 
-
+/**
+ * @ingroup dev_impl_media
+ *
+ * \brief `pylonCamera`: YARP device driver implementation for acquiring images
+ * from Pylon cameras.
+ *
+ * Documentation to be added
+ */
 class pylonDriver :
         public yarp::dev::DeviceDriver,
         public yarp::dev::IFrameGrabberControls,

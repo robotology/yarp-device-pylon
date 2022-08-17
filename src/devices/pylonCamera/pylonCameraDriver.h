@@ -31,8 +31,19 @@
  *
  * \brief `pylonCamera`: YARP device driver implementation for acquiring images
  * from Pylon cameras.
+ * 
+ * | YARP device name | YARP default nws        |
+ * |:----------------:|:-----------------------:|
+ * | `pylonCamera`    | `frameGrabber_nws_yarp` |
  *
- * Documentation to be added
+ * The parameters accepted by this device are:
+ * | Parameter name | SubParameter   | Type    | Units          | Default Value | Required                    | Description                                                       | Notes |
+ * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
+ * | serial_number  |      -         | int     | -              |   -           | Yes                         | Serial number of the camera to be opened                          |  |
+ * | period         |      -         | double  | s              |   0.0333      | No                          | Refresh period of acquistion from the camera in s                 | The cameras has a value cap for the acquisition framerate, check the documentation |
+ * | width          |      -         | uint    | pixel          |   640         | No                          | Width of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+ * | height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+ *
  */
 
 namespace {

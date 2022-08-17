@@ -6,23 +6,23 @@
 
 yarp_prepare_plugin(pylonCamera
   CATEGORY device
-  TYPE pylonDriver
-  INCLUDE pylonDriver.h
+  TYPE pylonCameraDriver
+  INCLUDE pylonCameraDriver.h
   EXTRA_CONFIG WRAPPER=frameGrabber_nws_yarp
   DEPENDS "pylon_FOUND"
   DEFAULT ON
 )
 
-if(ENABLE_pylon)
-  yarp_add_plugin(yarp_pylon)
+if(ENABLE_pylonCamera)
+  yarp_add_plugin(yarp_pylonCamera)
 
-  target_sources(yarp_pylon
+  target_sources(yarp_pylonCamera
     PRIVATE
-      pylonDriver.cpp
-      pylonDriver.h
+      pylonCameraDriver.cpp
+      pylonCameraDriver.h
   )
 
-  target_link_libraries(yarp_pylon
+  target_link_libraries(yarp_pylonCamera
     PUBLIC
       YARP::YARP_os
       YARP::YARP_sig
@@ -31,7 +31,7 @@ if(ENABLE_pylon)
   )
 
   yarp_install(
-    TARGETS yarp_pylon
+    TARGETS yarp_pylonCamera
     EXPORT yarp-device-pylon
     COMPONENT yarp-device-pylon
     LIBRARY DESTINATION ${YARP_DYNAMIC_PLUGINS_INSTALL_DIR}
@@ -39,5 +39,5 @@ if(ENABLE_pylon)
     YARP_INI DESTINATION ${YARP_PLUGIN_MANIFESTS_INSTALL_DIR}
   )
 
-  set_property(TARGET yarp_pylon PROPERTY FOLDER "Plugins/Device")
+  set_property(TARGET yarp_pylonCamera PROPERTY FOLDER "Plugins/Device")
 endif()

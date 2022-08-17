@@ -16,7 +16,7 @@
 #include <yarp/sig/ImageUtils.h>
 
 
-#include "pylonDriver.h"
+#include "pylonCameraDriver.h"
 
 using namespace yarp::dev;
 using namespace yarp::sig;
@@ -63,7 +63,7 @@ double fromRangeToZeroOne(cameraFeature_id_t feature, double value){
 }
 
 
-bool pylonDriver::setFramerate(const float _fps)
+bool pylonCameraDriver::setFramerate(const float _fps)
 {
     auto res = setOption("AcquisitionFrameRate",_fps);
     if (res) {
@@ -80,7 +80,7 @@ bool parseUint32Param(std::string param_name, std::uint32_t& param, yarp::os::Se
     }
     else
     {
-        yCWarning(PYLON) << param_name << "parameter not specifie, using"<<param;
+        yCWarning(PYLON_CAMERA) << param_name << "parameter not specifie, using"<<param;
         return false;
     }
 }
@@ -92,7 +92,7 @@ bool parseFloat64Param(std::string param_name, double& param, yarp::os::Searchab
     }
     else
     {
-        yCWarning(PYLON) << param_name << "parameter not specified, using"<<param;
+        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using"<<param;
         return false;
     }
 
@@ -105,12 +105,12 @@ bool parseStringParam(std::string param_name, std::string& param, yarp::os::Sear
     }
     else
     {
-        yCWarning(PYLON) << param_name << "parameter not specified, using"<<param;
+        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using"<<param;
         return false;
     }
 }
 
-bool pylonDriver::startCamera() {
+bool pylonCameraDriver::startCamera() {
     if (m_camera_ptr)
     {
         if (!m_camera_ptr->IsGrabbing())
@@ -121,7 +121,7 @@ bool pylonDriver::startCamera() {
     return true;
 }
 
-bool pylonDriver::stopCamera() {
+bool pylonCameraDriver::stopCamera() {
     if (m_camera_ptr)
     {
         if (m_camera_ptr->IsGrabbing())
@@ -132,13 +132,13 @@ bool pylonDriver::stopCamera() {
     return true;
 }
 
-bool pylonDriver::open(Searchable& config)
+bool pylonCameraDriver::open(Searchable& config)
 {
     bool ok{true};
-    yCTrace(PYLON) << "input params are " << config.toString();
+    yCTrace(PYLON_CAMERA) << "input params are " << config.toString();
     if (!config.check("serial_number"))
     {
-        yCError(PYLON)<< "serial_number parameter not specified";
+        yCError(PYLON_CAMERA)<< "serial_number parameter not specified";
         return false;
     }
     // TODO understand how to treat it, if string or int
@@ -158,7 +158,7 @@ bool pylonDriver::open(Searchable& config)
     PylonInitialize();
     // Get factory singleton
     CTlFactory& factory = CTlFactory::GetInstance();
-    yCDebug(PYLON)<<"SERIAL NUMBER!"<<m_serial_number<<config.find("serial_number").asString();
+    yCDebug(PYLON_CAMERA)<<"SERIAL NUMBER!"<<m_serial_number<<config.find("serial_number").asString();
     // Open the device using the S/N
     try
     {
@@ -166,19 +166,19 @@ bool pylonDriver::open(Searchable& config)
         if (m_camera_ptr) {
             m_camera_ptr->Open();
             if (!m_camera_ptr->IsOpen()) {
-                yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened";
+                yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot be opened";
                 return false;
             }
         }
         else {
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened";
+            yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot be opened";
             return false;
         }
     }
     catch (const GenericException &e)
     {
         // Error handling.
-        yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot be opened, error:"<<e.GetDescription();
+        yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot be opened, error:"<<e.GetDescription();
         return false;
     }
     // TODO get it from conf
@@ -194,12 +194,12 @@ bool pylonDriver::open(Searchable& config)
 
     ok = ok && setFramerate(m_fps);
 
-    yCDebug(PYLON)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
+    yCDebug(PYLON_CAMERA)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
 
     return startCamera();
 }
 
-bool pylonDriver::close()
+bool pylonCameraDriver::close()
 {
     if (m_camera_ptr->IsPylonDeviceAttached()) {
         m_camera_ptr->DetachDevice();
@@ -209,23 +209,23 @@ bool pylonDriver::close()
     return true;
 }
 
-int pylonDriver::getRgbHeight()
+int pylonCameraDriver::getRgbHeight()
 {
     return m_height;
 }
 
-int pylonDriver::getRgbWidth()
+int pylonCameraDriver::getRgbWidth()
 {
     return m_width;
 }
 
-bool pylonDriver::getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations)
+bool pylonCameraDriver::getRgbSupportedConfigurations(yarp::sig::VectorOf<CameraConfig> &configurations)
 {
-    yCWarning(PYLON) << "getRgbSupportedConfigurations not implemented yet";
+    yCWarning(PYLON_CAMERA) << "getRgbSupportedConfigurations not implemented yet";
     return false;
 }
 
-bool pylonDriver::getRgbResolution(int &width, int &height)
+bool pylonCameraDriver::getRgbResolution(int &width, int &height)
 {
     width = m_width;
     height = m_height;
@@ -233,7 +233,7 @@ bool pylonDriver::getRgbResolution(int &width, int &height)
 }
 
 
-bool pylonDriver::setRgbResolution(int width, int height)
+bool pylonCameraDriver::setRgbResolution(int width, int height)
 {
     bool res = false;
     if (width > 0 && height > 0)
@@ -249,44 +249,44 @@ bool pylonDriver::setRgbResolution(int width, int height)
 }
 
 
-bool pylonDriver::setRgbFOV(double horizontalFov, double verticalFov)
+bool pylonCameraDriver::setRgbFOV(double horizontalFov, double verticalFov)
 {
-    yCWarning(PYLON) << "setRgbFOV not supported";
+    yCWarning(PYLON_CAMERA) << "setRgbFOV not supported";
     return false;
 }
 
-bool pylonDriver::getRgbFOV(double &horizontalFov, double &verticalFov)
+bool pylonCameraDriver::getRgbFOV(double &horizontalFov, double &verticalFov)
 {
-    yCWarning(PYLON) << "getRgbFOV not supported";
+    yCWarning(PYLON_CAMERA) << "getRgbFOV not supported";
     return false;
 }
 
-bool pylonDriver::getRgbMirroring(bool& mirror)
+bool pylonCameraDriver::getRgbMirroring(bool& mirror)
 {
-    yCWarning(PYLON) << "Mirroring not supported";
+    yCWarning(PYLON_CAMERA) << "Mirroring not supported";
     return false;
 }
 
-bool pylonDriver::setRgbMirroring(bool mirror)
+bool pylonCameraDriver::setRgbMirroring(bool mirror)
 {
-    yCWarning(PYLON) << "Mirroring not supported";
+    yCWarning(PYLON_CAMERA) << "Mirroring not supported";
     return false;
 }
 
-bool pylonDriver::getRgbIntrinsicParam(Property& intrinsic)
+bool pylonCameraDriver::getRgbIntrinsicParam(Property& intrinsic)
 {
-    yCWarning(PYLON) << "getRgbIntrinsicParam not implemented yet";
+    yCWarning(PYLON_CAMERA) << "getRgbIntrinsicParam not implemented yet";
     return false;
 }
 
 
-bool pylonDriver::getCameraDescription(CameraDescriptor* camera)
+bool pylonCameraDriver::getCameraDescription(CameraDescriptor* camera)
 {
-    yCWarning(PYLON) << "getCameraDescription not implemented yet";
+    yCWarning(PYLON_CAMERA) << "getCameraDescription not implemented yet";
     return false;
 }
 
-bool pylonDriver::hasFeature(int feature, bool* hasFeature)
+bool pylonCameraDriver::hasFeature(int feature, bool* hasFeature)
 {
     cameraFeature_id_t f;
     f = static_cast<cameraFeature_id_t>(feature);
@@ -300,12 +300,12 @@ bool pylonDriver::hasFeature(int feature, bool* hasFeature)
     return true;
 }
 
-bool pylonDriver::setFeature(int feature, double value)
+bool pylonCameraDriver::setFeature(int feature, double value)
 {
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON_CAMERA) << "Feature not supported!";
         return false;
     }
     b = false;
@@ -325,7 +325,7 @@ bool pylonDriver::setFeature(int feature, double value)
         break;
     case YARP_FEATURE_WHITE_BALANCE:
         b = false;
-        yCError(PYLON)<<"White balance require 2 values";
+        yCError(PYLON_CAMERA)<<"White balance require 2 values";
         break;
     case YARP_FEATURE_GAMMA:
         b = setOption("Gamma", fromZeroOneToRange(f, value));
@@ -337,19 +337,19 @@ bool pylonDriver::setFeature(int feature, double value)
         b = setFramerate(value);
         break;
     default:
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON_CAMERA) << "Feature not supported!";
         return false;
     }
 
     return b;
 }
 
-bool pylonDriver::getFeature(int feature, double *value)
+bool pylonCameraDriver::getFeature(int feature, double *value)
 {
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON_CAMERA) << "Feature not supported!";
         return false;
     }
     b = false;
@@ -367,7 +367,7 @@ bool pylonDriver::getFeature(int feature, double *value)
         break;
     case YARP_FEATURE_WHITE_BALANCE:
         b = false;
-        yCError(PYLON)<<"White balance is a 2-values feature";
+        yCError(PYLON_CAMERA)<<"White balance is a 2-values feature";
         break;
     case YARP_FEATURE_GAMMA:
         b = getOption("Gamma", value);
@@ -380,20 +380,20 @@ bool pylonDriver::getFeature(int feature, double *value)
         *value = m_fps;
         break;
     default:
-        yCError(PYLON) << "Feature not supported!";
+        yCError(PYLON_CAMERA) << "Feature not supported!";
         return false;
     }
 
     *value = fromRangeToZeroOne(f,*value);
-    yCDebug(PYLON)<<"In 0-1"<<*value;
+    yCDebug(PYLON_CAMERA)<<"In 0-1"<<*value;
     return b;
 }
 
-bool pylonDriver::setFeature(int feature, double value1, double value2)
+bool pylonCameraDriver::setFeature(int feature, double value1, double value2)
 {
     auto f = static_cast<cameraFeature_id_t>(feature);
     if (f != YARP_FEATURE_WHITE_BALANCE) {
-        yCError(PYLON)<<YARP_FEATURE_WHITE_BALANCE<<"is not a 2-values feature supported";
+        yCError(PYLON_CAMERA)<<YARP_FEATURE_WHITE_BALANCE<<"is not a 2-values feature supported";
         return false;
     }
 
@@ -404,11 +404,11 @@ bool pylonDriver::setFeature(int feature, double value1, double value2)
     return res;
 }
 
-bool pylonDriver::getFeature(int feature, double *value1, double *value2)
+bool pylonCameraDriver::getFeature(int feature, double *value1, double *value2)
 {
     auto f = static_cast<cameraFeature_id_t>(feature);
     if (f != YARP_FEATURE_WHITE_BALANCE) {
-        yCError(PYLON)<<"This is not a 2-values feature supported";
+        yCError(PYLON_CAMERA)<<"This is not a 2-values feature supported";
         return false;
     }
 
@@ -418,28 +418,28 @@ bool pylonDriver::getFeature(int feature, double *value1, double *value2)
     res = res && getOption("BalanceRatio", value2);
     *value1 = fromRangeToZeroOne(f,*value1);
     *value2 = fromRangeToZeroOne(f,*value2);
-    yCDebug(PYLON)<<"In 0-1"<<*value1;
-    yCDebug(PYLON)<<"In 0-1"<<*value2;
+    yCDebug(PYLON_CAMERA)<<"In 0-1"<<*value1;
+    yCDebug(PYLON_CAMERA)<<"In 0-1"<<*value2;
     return res;
 }
 
-bool pylonDriver::hasOnOff(  int feature, bool *HasOnOff)
+bool pylonCameraDriver::hasOnOff(  int feature, bool *HasOnOff)
 {
     return hasAuto(feature, HasOnOff);
 }
 
-bool pylonDriver::setActive( int feature, bool onoff)
+bool pylonCameraDriver::setActive( int feature, bool onoff)
 {
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
     if (!hasOnOff(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
         return false;
     }
 
@@ -457,25 +457,25 @@ bool pylonDriver::setActive( int feature, bool onoff)
         b = setOption("GainAuto", val_to_set, true);
         break;
     default:
-        yCError(PYLON) << "Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
     return b;
 }
 
-bool pylonDriver::getActive( int feature, bool *isActive)
+bool pylonCameraDriver::getActive( int feature, bool *isActive)
 {
     bool b = false;
     if (!hasFeature(feature, &b) || !b)
     {
-        yCError(PYLON)<< "Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA)<< "Feature"<<feature<<"not supported!";
         return false;
     }
 
     if (!hasOnOff(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"does not have OnOff.. call hasOnOff() to know if a specific feature support OnOff mode";
         return false;
     }
 
@@ -493,7 +493,7 @@ bool pylonDriver::getActive( int feature, bool *isActive)
         b = getOption("GainAuto", val_to_get, true);
         break;
     default:
-        yCError(PYLON)<<"Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA)<<"Feature"<<feature<<"not supported!";
         return false;
     }
     if (b) {
@@ -507,7 +507,7 @@ bool pylonDriver::getActive( int feature, bool *isActive)
     return b;
 }
 
-bool pylonDriver::hasAuto(int feature, bool *hasAuto)
+bool pylonCameraDriver::hasAuto(int feature, bool *hasAuto)
 {
     cameraFeature_id_t f;
     f = static_cast<cameraFeature_id_t>(feature);
@@ -521,22 +521,22 @@ bool pylonDriver::hasAuto(int feature, bool *hasAuto)
     return true;
 }
 
-bool pylonDriver::hasManual( int feature, bool* hasManual)
+bool pylonCameraDriver::hasManual( int feature, bool* hasManual)
 {
     return hasFeature(feature, hasManual);
 }
 
-bool pylonDriver::hasOnePush(int feature, bool* hasOnePush)
+bool pylonCameraDriver::hasOnePush(int feature, bool* hasOnePush)
 {
     return hasAuto(feature, hasOnePush);
 }
 
-bool pylonDriver::setMode(int feature, FeatureMode mode)
+bool pylonCameraDriver::setMode(int feature, FeatureMode mode)
 {
     bool b {false};
     if (!hasAuto(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"not supported!";
         return false;
     }
 
@@ -554,12 +554,12 @@ bool pylonDriver::setMode(int feature, FeatureMode mode)
     return b;
 }
 
-bool pylonDriver::getMode(int feature, FeatureMode* mode)
+bool pylonCameraDriver::getMode(int feature, FeatureMode* mode)
 {
     bool b {false};
     if (!hasAuto(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"not supported!";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"not supported!";
         return false;
     }
     bool get_active{false};
@@ -576,12 +576,12 @@ bool pylonDriver::getMode(int feature, FeatureMode* mode)
     return b;
 }
 
-bool pylonDriver::setOnePush(int feature)
+bool pylonCameraDriver::setOnePush(int feature)
 {
     bool b = false;
     if (!hasOnePush(feature, &b) || !b)
     {
-        yCError(PYLON) << "Feature"<<feature<<"doesn't have OnePush";
+        yCError(PYLON_CAMERA) << "Feature"<<feature<<"doesn't have OnePush";
         return false;
     }
 
@@ -591,7 +591,7 @@ bool pylonDriver::setOnePush(int feature)
     return b;
 }
 
-bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
+bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 {
     std::lock_guard<std::mutex> guard(m_mutex);
     if (m_camera_ptr->IsGrabbing())
@@ -608,7 +608,7 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
         catch (const Pylon::GenericException &e)
         {
             // Error handling.
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot get images error:"<<e.GetDescription();
+            yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot get images error:"<<e.GetDescription();
             return false;
         }
         // Image grabbed successfully?
@@ -622,37 +622,37 @@ bool pylonDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
             image.resize(m_width, m_height);
             pylon_format_converter.Convert(pylon_image, grab_result_ptr);
             if (!pylon_image.IsValid()) {
-                 yCError(PYLON)<<"Frame invalid!";
+                 yCError(PYLON_CAMERA)<<"Frame invalid!";
                  return false;
             }
             // For some reason the first frame cannot be converted To be investigated
             static bool first_acquisition{true};
             if (first_acquisition) {
-                yCDebug(PYLON)<<"Skipping";
+                yCDebug(PYLON_CAMERA)<<"Skipping";
                 first_acquisition = false;
                 return false;
             }
             memcpy((void*)image.getRawImage(), pylon_image.GetBuffer(), mem_to_wrt);
         }
         else {
-            yCError(PYLON)<<"Acquisition failed";
+            yCError(PYLON_CAMERA)<<"Acquisition failed";
             return false;
         }
         return true;
     }
     else
     {
-        yCError(PYLON)<<"Errors in retrieving images";
+        yCError(PYLON_CAMERA)<<"Errors in retrieving images";
         return false;
     }
 }
 
-int  pylonDriver::height() const
+int  pylonCameraDriver::height() const
 {
     return m_height;
 }
 
-int  pylonDriver::width() const
+int  pylonCameraDriver::width() const
 {
     return m_width;
 }

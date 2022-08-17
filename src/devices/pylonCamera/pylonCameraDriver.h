@@ -36,10 +36,10 @@
  */
 
 namespace {
-YARP_LOG_COMPONENT(PYLON, "yarp.device.pylon")
+YARP_LOG_COMPONENT(PYLON_CAMERA, "yarp.device.pylonCamera")
 }
 
-class pylonDriver :
+class pylonCameraDriver :
         public yarp::dev::DeviceDriver,
         public yarp::dev::IFrameGrabberControls,
         public yarp::dev::IFrameGrabberImage,
@@ -52,8 +52,8 @@ private:
 
 
 public:
-    pylonDriver() = default;
-    ~pylonDriver() override = default;
+    pylonCameraDriver() = default;
+    ~pylonCameraDriver() override = default;
 
     // DeviceDriver
     bool open(yarp::os::Searchable& config) override;
@@ -108,7 +108,7 @@ private:
         stopCamera();
         try
         {
-            yCDebug(PYLON)<<"Setting "<<option<<"to"<<value;
+            yCDebug(PYLON_CAMERA)<<"Setting "<<option<<"to"<<value;
             if constexpr (std::is_same<T,float>::value || std::is_same<T,double>::value) {
                 Pylon::CFloatParameter(node_map, option.c_str()).SetValue(value);
             }
@@ -130,7 +130,7 @@ private:
         catch (const Pylon::GenericException &e)
         {
             // Error handling.
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot set"<<option<<"to:"<<value<<"error:"<<e.GetDescription();
+            yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot set"<<option<<"to:"<<value<<"error:"<<e.GetDescription();
             ok = false;
         }
         return startCamera() && ok;
@@ -146,15 +146,15 @@ private:
         {
             if constexpr (std::is_same<T,float*>::value || std::is_same<T,double*>::value) {
                 *value = Pylon::CFloatParameter(node_map, option.c_str()).GetValue();
-                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
+                 yCDebug(PYLON_CAMERA)<<"Getting"<<option<<"value:"<<*value;
             }
             else if constexpr (std::is_same<T, bool*>::value) {
                 *value = Pylon::CBooleanParameter(node_map, option.c_str()).GetValue();
-                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
+                 yCDebug(PYLON_CAMERA)<<"Getting"<<option<<"value:"<<*value;
             }
             else if constexpr (std::is_same<T, int*>::value) {
                 *value = Pylon::CIntegerParameter(node_map, option.c_str()).GetValue();
-                 yCDebug(PYLON)<<"Getting"<<option<<"value:"<<*value;
+                 yCDebug(PYLON_CAMERA)<<"Getting"<<option<<"value:"<<*value;
             }
             else if constexpr (std::is_same<T, std::string>::value) {
                 if (isEnum) {
@@ -168,7 +168,7 @@ private:
         catch (const Pylon::GenericException &e)
         {
             // Error handling.
-            yCError(PYLON)<< "Camera"<<m_serial_number<<"cannot get"<<option<<"error:"<<e.GetDescription();
+            yCError(PYLON_CAMERA)<< "Camera"<<m_serial_number<<"cannot get"<<option<<"error:"<<e.GetDescription();
             return false;
         }
         return true;

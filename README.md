@@ -28,6 +28,7 @@ How to use Basler pylon cameras as a YARP device
 Before proceeding further, please install the following dependencies:
 - [YARP 3.5 or greater](https://www.yarp.it/)
 - [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
+- [OpenCV](https://opencv.org/)
 
 ### Build and install yarp-device-pylon
 

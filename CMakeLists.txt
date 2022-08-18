@@ -12,8 +12,9 @@ project(yarp-device-pylon
 include(FeatureSummary)
 
 find_package(YCM 0.11 REQUIRED)
-find_package(YARP 3.5 COMPONENTS os sig dev OPTIONAL_COMPONENTS math REQUIRED)
+find_package(YARP 3.5 COMPONENTS os sig dev cv OPTIONAL_COMPONENTS math REQUIRED)
 find_package(pylon 7.1.0 REQUIRED)
+find_package(OpenCV REQUIRED)
 
 include(GNUInstallDirs)
 

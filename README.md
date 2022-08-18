@@ -1,143 +1,86 @@
-# 1. Hw
 
-## 1.1. Important data
+![YARP logo](https://raw.githubusercontent.com/robotology/yarp/master/doc/images/yarp-robot-24.png "yarp-device-pylon")
+yarp-device-pylon
+=================
 
-**Board architecture:**  
-aarch64  
-**Camera model:**  
-daA4200-30mci
-Supported pixel type:
-https://docs.baslerweb.com/embedded-vision/pixel-format#maximum-pixel-bit-depth
-Available features:
-https://docs.baslerweb.com/embedded-vision/available-features#daa4200-30mci
-**OS**  
-Ubuntu 18.04  
+This is the [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/) device for [YARP](https://www.yarp.it/).
+It supports the [Basler cameras](https://docs.baslerweb.com/cameras).
 
-https://docs.baslerweb.com/embedded-vision/daa4200-30mci
+The **Basler™** cameras currently compatible with YARP are:
+- [daa4200-30mci](https://docs.baslerweb.com/embedded-vision/daa4200-30mci)
 
-## 1.2. Jumpers
+License
+-------
 
-For FW flash:
+[![License](https://img.shields.io/badge/license-BSD--3--Clause%20%2B%20others-19c2d8.svg)](https://github.com/robotology/yarp-device-realsense2/blob/master/LICENSE)
 
-![jumper](img/flash-jumper.jpg)
+This software may be modified and distributed under the terms of the
+BSD-3-Clause license. See the accompanying LICENSE file for details.
 
-For normal use remove it
+The pylonCamera device uses the
+[pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/) sdk, released
+under the [pylon license](https://docs.baslerweb.com/licensing-information).
+See the relative documentation for the terms of the license.
 
-# 2. Software prerequisites
+How to use Basler pylon cameras as a YARP device
+---------------------------------------------------
+### Dependencies
+Before proceeding further, please install the following dependencies:
+- [YARP 3.5 or greater](https://www.yarp.it/)
+- [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
 
-## 2.1. Pylon SDK
-For new version check:
-```
-https://www.baslerweb.com/en/downloads/software-downloads/software-pylon-7-1-0-linux-arm-64bit-debian/
-```
-Then
-```bash
-sudo dpkg -i xxx
-```
-
-## 2.2. robotology repo
-On Nvidia board:
-
-```
-git clone https://github.com/robotology/yarp-device-basler
-```
-
-:warning:_Troubleshooting_
-If you haven't yet configured the internet access see below.
-
-## 2.3. cmake 3.13
-On Ubuntu 18.04 you need at least cmake 3.13
+### Build and install yarp-device-pylon
 
 ```bash
-sudo apt purge --auto-remove cmake
-sudo apt update && \
-sudo apt install -y software-properties-common lsb-release && \
-sudo apt clean all
-wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | sudo tee /etc/apt/trusted.gpg.d/kitware.gpg >/dev/null
-sudo apt-add-repository "deb https://apt.kitware.com/ubuntu/ $(lsb_release -cs) main"
-sudo apt update
-sudo apt install kitware-archive-keyring
-sudo rm /etc/apt/trusted.gpg.d/kitware.gpg
-sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6AF7F09730B3F0A4
-sudo apt update
-sudo apt install cmake
-sudo apt install cmake-curses-gui
+mkdir build
+cd build
+cmake -DCMAKE_INSTALL_PREFIX=<installation_path> ..
+make
+make install
 ```
-## 2.4. Info
-https://www.baslerweb.com/en/downloads/software-downloads/#type=embedded_software;language=all;version=all
+In order to make the device detectable, add `<installation_path>/share/yarp` to the `YARP_DATA_DIRS` environment variable of the system.
 
-Programmer guide:
-https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
+Alternatively, if `YARP` has been installed using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild), it is possible to use `<directory-where-you-downloaded-robotology-superbuild>/build/install` as the `<installation_path>`.
 
-## 2.5. Samples location
-On the Nvidia board
-/opt/pylon/share/pylon/Samples/C++
+### How to run pylonCamera driver
 
-# 3. SSH
-
-At the moment you can connect via ssh:
-```bash
-ssh -X nvidia@10.0.1.17
-```
-pwd: nvidia
+From command line:
 
 ```bash
-ssh -X root@10.0.1.17
-```
-pwd: icub
-
-# 4. Internet acess to Nvidia board via Shorewall
-
-:exclamation:<u>To be done on iCub-head.</u>
-
-Check and modify in file (you can find it in the repository) `shorewall/interfaces`
-
-- internet access netcard (ZONE=net) with your internet card
-- local access netcard (ZONE=lan) with your LAN net card
-
-For check netcard names `ifconfig`
-
-Do the same in `shorewall/masq` \<internet card\>\<lan card\>
-
-Then
-
-```
-sudo apt-get install shorewall
-sudo cp shorewall/* /etc/shorewall
-sudo service shorewall start
+yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --serial_number 1234567 --period 0.033 --width 640 --width 480 
 ```
 
-:exclamation:<u>To be done on Nvidia.</u>
-
-Configure the board address via GUI:
-static
-ip:10.0.1.17
-netmask:255.255.255.0
-gateway:10.0.1.104
-
-:exclamation:<u>Test</u>
-
-Test from Nvidia `ping 8.8.8.8`
-
-
-:warning:_Troubleshooting_
-
-- Check if the Nvidia is running and is connected. 
-- Check Nvidia address
-- Check if eth board on icub-head is correctly configured
-
-# 5. Development environment with Visual studio code
-TODO
-
-# 6. Fast view image on disk
-
-Use:
-```bash
-feh <file name>
+It is possible to run it without specifying the nws, the default is `frameGrabber_nws_yarp`:
+```
+yarpdev --device pylonCamera --serial_number 1234567
 ```
 
-# Notes
+## Device documentation
+This device driver exposes the `yarp::dev::IFrameGrabberImage` and
+`yarp::dev::IFrameGrabberControls` interfaces to read the images and operate on
+the available settings.
+See the documentation for more details about each interface.
 
-- From https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
-Basler GigE cameras can be configured to send the image data stream to multiple destinations. Either IP multicasts or IP broadcasts can be used. For more information consult the advanced topics section.
+| YARP device name | YARP default nws        |
+|:----------------:|:-----------------------:|
+| `pylonCamera`    | `frameGrabber_nws_yarp` |
 
+The parameters accepted by this device are:
+| Parameter name | SubParameter   | Type    | Units          | Default Value | Required                    | Description                                                       | Notes |
+|:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
+| serial_number  |      -         | int     | -              |   -           | Yes                         | Serial number of the camera to be opened                          |  |
+| period         |      -         | double  | s              |   0.0333      | No                          | Refresh period of acquistion from the camera in s                 | The cameras has a value cap for the acquisition framerate, check the documentation |
+| width          |      -         | uint    | pixel          |   640         | No                          | Width of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+| height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+
+## Informations for developers
+
+[This](./doc/dev-informations.md) page contains useful informations for developers.
+
+Maintainers
+--------------
+This repository is maintained by:
+
+| | | | |
+|:---:|:---:|:---:|:---:|
+| [<img src="https://github.com/Nicogene.png" width="40">](https://github.com/Nicogene) | [@Nicogene](https://github.com/Nicogene) | [<img src="https://github.com/triccyx.png" width="40">](https://github.com/triccyx) | [@triccyx](https://github.com/triccyx) |

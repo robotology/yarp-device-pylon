@@ -28,6 +28,7 @@ How to use Basler pylon cameras as a YARP device
 Before proceeding further, please install the following dependencies:
 - [YARP 3.5 or greater](https://www.yarp.it/)
 - [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
+- [OpenCV](https://opencv.org/)
 
 ### Build and install yarp-device-pylon
 
@@ -70,6 +71,7 @@ The parameters accepted by this device are:
 |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
 | serial_number  |      -         | int     | -              |   -           | Yes                         | Serial number of the camera to be opened                          |  |
 | period         |      -         | double  | s              |   0.0333      | No                          | Refresh period of acquistion from the camera in s                 | The cameras has a value cap for the acquisition framerate, check the documentation |
+| rotation       |      -         | double  | degrees        |   0.0         | No                          | Rotation applied from the center of the image                     | Depending the size requested some rotations are not allowed. The rotation worse the performance of the device. Allowed values: 0.0, 90.0, -90.0, 180.0.|
 | width          |      -         | uint    | pixel          |   640         | No                          | Width of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
 | height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
 

@@ -41,8 +41,9 @@
  * |:--------------:|:--------------:|:-------:|:--------------:|:-------------:|:--------------------------: |:-----------------------------------------------------------------:|:-----:|
  * | serial_number  |      -         | int     | -              |   -           | Yes                         | Serial number of the camera to be opened                          |  |
  * | period         |      -         | double  | s              |   0.0333      | No                          | Refresh period of acquistion from the camera in s                 | The cameras has a value cap for the acquisition framerate, check the documentation |
+ * | rotation       |      -         | double  | degrees        |   0.0         | No                          | Rotation applied from the center of the image                     | Depending the size requested some rotations are not allowed. The rotation worse the performance of the device. Allowed values: 0.0, 90.0, -90.0, 180.0.|
  * | width          |      -         | uint    | pixel          |   640         | No                          | Width of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
- * | height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+ * | height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                      | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
  *
  */
 
@@ -208,6 +209,7 @@ private:
     bool m_verbose{false};
     bool m_initialized{false};
     float m_fps{30.0};
+    double m_rotation{0.0}; //degrees
     uint32_t m_width{640};
     uint32_t m_height{480};
     Pylon::String_t m_serial_number{""};

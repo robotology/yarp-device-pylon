@@ -27,7 +27,11 @@ if(ENABLE_pylonCamera)
       YARP::YARP_os
       YARP::YARP_sig
       YARP::YARP_dev
+      YARP::YARP_cv
       pylon::pylon
+      opencv_core
+      opencv_video
+      opencv_imgproc
   )
 
   yarp_install(

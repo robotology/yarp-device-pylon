@@ -14,6 +14,11 @@
 #include <yarp/os/LogComponent.h>
 #include <yarp/os/Value.h>
 #include <yarp/sig/ImageUtils.h>
+#include <yarp/cv/Cv.h>
+
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core_c.h>
+#include <opencv2/videoio.hpp>
 
 
 #include "pylonCameraDriver.h"
@@ -22,6 +27,7 @@ using namespace yarp::dev;
 using namespace yarp::sig;
 using namespace yarp::os;
 using namespace Pylon;
+using namespace cv;
 
 using namespace std;
 
@@ -51,6 +57,10 @@ static const std::map<cameraFeature_id_t, std::pair<double,double>> featureMinMa
                                                                                     {YARP_FEATURE_WHITE_BALANCE, {1.0, 8.0}}, // not sure about it, the doc is not clear, found empirically
                                                                                     //{YARP_FEATURE_GAMMA, {0.0, 4.0}},
                                                                                     {YARP_FEATURE_GAIN, {0.0, 33.06}} };
+
+static const std::map<double, int> rotationToCVRot {{90.0,  ROTATE_90_CLOCKWISE},
+                                                    {-90.0, ROTATE_90_COUNTERCLOCKWISE},
+                                                    {180.0, ROTATE_180}};
 
 // We usually set the features through a range between 0 an 1, we have to translate it in meaninful value for the camera
 double fromZeroOneToRange(cameraFeature_id_t feature, double value){
@@ -148,6 +158,11 @@ bool pylonCameraDriver::open(Searchable& config)
     parseUint32Param("width", m_width, config);
     parseUint32Param("height", m_height, config);
     parseFloat64Param("period", period, config);
+    parseFloat64Param("rotation", m_rotation, config);
+
+    if (m_rotation == -90.0 || m_rotation == 90.0) {
+        std::swap(m_width, m_height);
+    }
 
     if (period != 0.0)
     {
@@ -196,7 +211,7 @@ bool pylonCameraDriver::open(Searchable& config)
 
     yCDebug(PYLON_CAMERA)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
 
-    return startCamera();
+    return ok && startCamera();
 }
 
 bool pylonCameraDriver::close()
@@ -593,7 +608,8 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
         CGrabResultPtr grab_result_ptr;
         CPylonImage pylon_image;
         CImageFormatConverter pylon_format_converter;
-        pylon_format_converter.OutputPixelFormat = PixelType_RGB8packed;
+        // In case of rotation we need to use BGR coding because we use opencv.
+        pylon_format_converter.OutputPixelFormat = m_rotation != 0.0 ? PixelType_BGR8packed : PixelType_RGB8packed;
         // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
         // TODO change the hardcoded 5000 to the exposure time.
         try {
@@ -612,12 +628,8 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
             m_height = grab_result_ptr->GetHeight();
             size_t mem_to_wrt = m_width * m_height * image.getPixelSize();
 
-            // TODO Check pixel code
-            image.resize(m_width, m_height);
-            pylon_format_converter.Convert(pylon_image, grab_result_ptr);
-            if (!pylon_image.IsValid()) {
-                 yCError(PYLON_CAMERA)<<"Frame invalid!";
-                 return false;
+            if (m_rotation == -90.0 || m_rotation == 90.0) {
+                std::swap(m_width, m_height);
             }
             // For some reason the first frame cannot be converted To be investigated
             static bool first_acquisition{true};
@@ -626,7 +638,28 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
                 first_acquisition = false;
                 return false;
             }
-            memcpy((void*)image.getRawImage(), pylon_image.GetBuffer(), mem_to_wrt);
+
+            // TODO Check pixel code
+            image.resize(m_width, m_height);
+            pylon_format_converter.Convert(pylon_image, grab_result_ptr);
+            if (!pylon_image.IsValid()) {
+                 yCError(PYLON_CAMERA)<<"Frame invalid!";
+                 return false;
+            }
+
+            if (m_rotation != 0.0) {
+
+                Mat rotated(grab_result_ptr->GetHeight(), grab_result_ptr->GetWidth(), CV_8UC3, (uint8_t*)pylon_image.GetBuffer());
+                //warpAffine(Mat(grab_result_ptr->GetHeight(), grab_result_ptr->GetWidth(), CV_8UC3, (uint8_t*)pylon_image.GetBuffer()),
+                //            rotated, getRotationMatrix2D( Point( grab_result_ptr->GetWidth()/2, grab_result_ptr->GetHeight()/2 ),
+                //            m_rotation, 1.0 ), rotated.size());
+                cv::rotate(rotated, rotated, rotationToCVRot.at(m_rotation));
+                image = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(rotated);
+
+            }
+            else {
+                memcpy((void*)image.getRawImage(), pylon_image.GetBuffer(), mem_to_wrt);
+            }
         }
         else {
             yCError(PYLON_CAMERA)<<"Acquisition failed";

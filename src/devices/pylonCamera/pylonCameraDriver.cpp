@@ -196,7 +196,7 @@ bool pylonCameraDriver::open(Searchable& config)
 
     yCDebug(PYLON_CAMERA)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
 
-    return startCamera();
+    return ok && startCamera();
 }
 
 bool pylonCameraDriver::close()

@@ -48,7 +48,7 @@ Alternatively, if `YARP` has been installed using the [robotology-superbuild](ht
 From command line:
 
 ```bash
-yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --serial_number 1234567 --period 0.033 --width 640 --height 480 --rotation 90.0
+yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --name /right_cam --serial_number 1234567 --period 0.033 --width 640 --height 480 --rotation 90.0
 ```
 
 or 
@@ -61,7 +61,8 @@ Where `PylonConf.ini`:
 
 ```ini
 device frameGrabber_nws_yarp
-subdevice pylonCamera 
+subdevice pylonCamera
+name /right_cam
 serial_number 1234567 
 period 0.033 
 width 640 

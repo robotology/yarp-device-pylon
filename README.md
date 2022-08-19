@@ -48,7 +48,7 @@ Alternatively, if `YARP` has been installed using the [robotology-superbuild](ht
 From command line:
 
 ```bash
-yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --serial_number 1234567 --period 0.033 --width 640 --width 480 
+yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --serial_number 1234567 --period 0.033 --width 640 --width 480 --rotation 90.0
 ```
 
 It is possible to run it without specifying the nws, the default is `frameGrabber_nws_yarp`:

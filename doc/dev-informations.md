@@ -66,7 +66,7 @@ Test from Nvidia `ping 8.8.8.8`
 
 For flashing the [jetpack](https://developer.nvidia.com/embedded/jetpack) firmware rember the use the jumper as follow:
 
-![jumper](img/flash-jumper.jpg)
+![jumper](../img/flash-jumper.jpg)
 
 For normal use remove it.
 

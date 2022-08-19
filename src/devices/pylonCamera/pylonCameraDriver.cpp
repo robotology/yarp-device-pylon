@@ -631,13 +631,6 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
             if (m_rotation == -90.0 || m_rotation == 90.0) {
                 std::swap(m_width, m_height);
             }
-            // For some reason the first frame cannot be converted To be investigated
-            static bool first_acquisition{true};
-            if (first_acquisition) {
-                yCDebug(PYLON_CAMERA)<<"Skipping";
-                first_acquisition = false;
-                return false;
-            }
 
             // TODO Check pixel code
             image.resize(m_width, m_height);
@@ -645,6 +638,14 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
             if (!pylon_image.IsValid()) {
                  yCError(PYLON_CAMERA)<<"Frame invalid!";
                  return false;
+            }
+            
+            // For some reason the first frame cannot be converted To be investigated
+            static bool first_acquisition{true};
+            if (first_acquisition) {
+                yCDebug(PYLON_CAMERA)<<"Skipping";
+                first_acquisition = false;
+                return false;
             }
 
             if (m_rotation != 0.0) {

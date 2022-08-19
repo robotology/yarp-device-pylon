@@ -51,7 +51,26 @@ From command line:
 yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --serial_number 1234567 --period 0.033 --width 640 --width 480 --rotation 90.0
 ```
 
-It is possible to run it without specifying the nws, the default is `frameGrabber_nws_yarp`:
+or 
+
+```
+yarpdev --from PylonConf.ini
+```
+
+Where `PylonConf.ini`:
+
+```ini
+device frameGrabber_nws_yarp
+subdevice pylonCamera 
+serial_number 1234567 
+period 0.033 
+width 640 
+width 480 
+rotation 90.0
+```
+
+
+This is instead the minimum number of parameters for running the device, the default nws is `frameGrabber_nws_yarp`:
 ```
 yarpdev --device pylonCamera --serial_number 1234567
 ```

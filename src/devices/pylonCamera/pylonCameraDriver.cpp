@@ -19,6 +19,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core_c.h>
 #include <opencv2/videoio.hpp>
+#if defined USE_CUDA
+#include <opencv2/cudawarping.hpp>
+#endif // USE_CUDA
 
 
 #include "pylonCameraDriver.h"
@@ -639,7 +642,7 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
                  yCError(PYLON_CAMERA)<<"Frame invalid!";
                  return false;
             }
-            
+
             // For some reason the first frame cannot be converted To be investigated
             static bool first_acquisition{true};
             if (first_acquisition) {
@@ -654,7 +657,21 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
                 //warpAffine(Mat(grab_result_ptr->GetHeight(), grab_result_ptr->GetWidth(), CV_8UC3, (uint8_t*)pylon_image.GetBuffer()),
                 //            rotated, getRotationMatrix2D( Point( grab_result_ptr->GetWidth()/2, grab_result_ptr->GetHeight()/2 ),
                 //            m_rotation, 1.0 ), rotated.size());
+#if defined USE_CUDA
+                cv::cuda::GpuMat gpu_im ;
+                gpu_im.upload( rotated ); // RAM => GPU
+
+                //Rotate from 90
+                cv::Size size = rotated.size();
+                cv::cuda::GpuMat gpu_im_rot ;
+                // TODO che if the resulting image is W x H or viceversa
+                cv::cuda::rotate( gpu_im, gpu_im_rot, cv::Size( size.height, size.width ), m_rotation, size.height-1, 0, cv::INTER_LINEAR  );
+
+                gpu_im_rot.download(rotated); //GPU => RAM
+
+#else
                 cv::rotate(rotated, rotated, rotationToCVRot.at(m_rotation));
+#endif //USE_CUDA
                 image = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(rotated);
 
             }

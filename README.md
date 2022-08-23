@@ -28,7 +28,7 @@ How to use Basler pylon cameras as a YARP device
 Before proceeding further, please install the following dependencies:
 - [YARP 3.5 or greater](https://www.yarp.it/)
 - [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
-- [OpenCV](https://opencv.org/)
+- [OpenCV](https://opencv.org/) ( + [CUDA](https://opencv.org/platforms/cuda/) optional)
 
 ### Build and install yarp-device-pylon
 
@@ -51,7 +51,7 @@ From command line:
 yarpdev --device frameGrabber_nws_yarp --subdevice pylonCamera --name /right_cam --serial_number 1234567 --period 0.033 --width 640 --height 480 --rotation 90.0
 ```
 
-or 
+or
 
 ```
 yarpdev --from PylonConf.ini
@@ -63,10 +63,10 @@ Where `PylonConf.ini`:
 device frameGrabber_nws_yarp
 subdevice pylonCamera
 name /right_cam
-serial_number 1234567 
-period 0.033 
-width 640 
-width 480 
+serial_number 1234567
+period 0.033
+width 640
+width 480
 rotation 90.0
 ```
 

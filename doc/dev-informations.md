@@ -43,6 +43,14 @@ sudo cp shorewall/* /etc/shorewall
 sudo service shorewall start
 ```
 
+On host PC make sure your IP4 address is:
+```
+static
+ip:10.0.0.2
+netmask:255.255.255.0
+gateway:10.0.0.17
+```
+
 :exclamation:<u>To be done on Nvidia.</u>
 
 Configure the board address via GUI:
@@ -50,7 +58,7 @@ Configure the board address via GUI:
 static
 ip:10.0.0.17
 netmask:255.255.255.0
-gateway:<your static ip>
+gateway:10.0.0.2
 ```
 :exclamation:<u>Test</u>
 

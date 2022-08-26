@@ -214,6 +214,12 @@ bool pylonCameraDriver::open(Searchable& config)
 
     yCDebug(PYLON_CAMERA)<<"Starting with this fps"<<CFloatParameter(nodemap, "AcquisitionFrameRate").GetValue();
 
+#if defined USE_CUDA
+    yCDebug(PYLON_CAMERA)<<"Using CUDA!";
+#else
+    yCDebug(PYLON_CAMERA)<<"Not using CUDA!";
+#endif
+
     return ok && startCamera();
 }
 

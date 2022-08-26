@@ -26,7 +26,10 @@ if(ENABLE_pylonCamera)
                            opencv_video
                            opencv_imgproc)
 
-  if (CUDA_FOUND AND OpenCV_CUDA_VERSION)
+  message("-------------------")
+  message(STATUS "${OpenCV_CUDA_VERSION}")
+  message(STATUS "${TRY_ACTIVATE_CUDA}")
+  if (CUDA_FOUND AND OpenCV_CUDA_VERSION AND TRY_ACTIVATE_CUDA)
     target_compile_definitions(yarp_pylonCamera PUBLIC -DUSE_CUDA)
   endif()
 

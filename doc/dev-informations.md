@@ -97,8 +97,26 @@ sudo apt install cmake
 sudo apt install cmake-curses-gui
 ```
 
+# Testing the board
+
+To test if the board images have artifacts it is possible to use yarpdatadumper
+
+```bash
+yarpdev --from PylonConf.ini
+yarpdatadumper --name /log --rxTime --txTime --type image
+yarp connect /right_cam /log mjpeg
+
+...wait for some seconds...
+
+killall yarpdatadumper
+
+```
+Then check in folder /log in each images for artifacts 
+
 # Notes
 
 - From https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
 Basler GigE cameras can be configured to send the image data stream to multiple destinations. Either IP multicasts or IP broadcasts can be used. For more information consult the advanced topics section.
+
+
 

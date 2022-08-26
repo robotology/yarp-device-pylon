@@ -51,6 +51,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS 1)
+option(TRY_ACTIVATE_CUDA "Try to compile with CUDA" OFF)
 
 include(AddUninstallTarget)
 

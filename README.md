@@ -94,6 +94,7 @@ The parameters accepted by this device are:
 | rotation       |      -         | double  | degrees        |   0.0         | No                          | Rotation applied from the center of the image                     | Depending the size requested some rotations are not allowed. The rotation worse the performance of the device. Allowed values: 0.0, 90.0, -90.0, 180.0.|
 | width          |      -         | uint    | pixel          |   640         | No                          | Width of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
 | height         |      -         | uint    | pixel          |   480         | No                          | Height of the images requested to the camera                       | The cameras has a value cap for the width of the image that can provide, check the documentation. Zero or negative value not accepted |
+| rotationwithcrop         |      -         | bool    |     -      |   false         | No                          | The rotation, if the param is true, is obtained swapping x with y                       | The image will have a resolution swapper respect to what is requested |
 
 **Suggested resolutions**
 |resolution|carrier|fps|

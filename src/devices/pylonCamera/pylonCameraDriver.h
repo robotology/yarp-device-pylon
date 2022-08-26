@@ -225,5 +225,6 @@ class pylonCameraDriver : public yarp::dev::DeviceDriver, public yarp::dev::IFra
     uint32_t m_height{480};
     Pylon::String_t m_serial_number{""};
     std::unique_ptr<Pylon::CInstantCamera> m_camera_ptr;
+    bool m_rotationWithCrop{false};
 };
 #endif  // PYLON_DRIVER_H

@@ -58,9 +58,9 @@ YARP_LOG_COMPONENT(PYLON_CAMERA, "yarp.device.pylonCamera")
 class pylonCameraDriver : public yarp::dev::DeviceDriver, public yarp::dev::IFrameGrabberControls, public yarp::dev::IFrameGrabberImage, public yarp::dev::IRgbVisualParams
 {
    private:
-    typedef yarp::os::Stamp Stamp;
-    typedef yarp::os::Property Property;
-    typedef yarp::sig::FlexImage FlexImage;
+    using Stamp = yarp::os::Stamp;
+    using Property = yarp::os::Property;
+    using FlexImage = yarp::sig::FlexImage;
 
    public:
     pylonCameraDriver() = default;

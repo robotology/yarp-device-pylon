@@ -102,7 +102,8 @@ bool parseFloat64Param(std::string param_name, double& param, yarp::os::Searchab
         return false;
     }
 }
-bool parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config) {
+bool parseStringParam(std::string param_name, std::string& param, yarp::os::Searchable& config)
+{
     if (config.check(param_name) && config.find(param_name).isString())
     {
         param = config.find(param_name).asString();
@@ -110,12 +111,13 @@ bool parseStringParam(std::string param_name, std::string& param, yarp::os::Sear
     }
     else
     {
-        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using"<<param;
+        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using" << param;
         return false;
     }
 }
 
-bool parseBooleanParam(std::string param_name, bool& param, yarp::os::Searchable& config) {
+bool parseBooleanParam(std::string param_name, bool& param, yarp::os::Searchable& config)
+{
     if (config.check(param_name) && config.find(param_name).isBool())
     {
         param = config.find(param_name).asBool();
@@ -123,12 +125,13 @@ bool parseBooleanParam(std::string param_name, bool& param, yarp::os::Searchable
     }
     else
     {
-        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using"<<param;
+        yCWarning(PYLON_CAMERA) << param_name << "parameter not specified, using" << param;
         return false;
     }
 }
 
-bool pylonCameraDriver::startCamera() {
+bool pylonCameraDriver::startCamera()
+{
     if (m_camera_ptr)
     {
         if (!m_camera_ptr->IsGrabbing())
@@ -169,13 +172,14 @@ bool pylonCameraDriver::open(Searchable& config)
     parseFloat64Param("period", period, config);
     parseFloat64Param("rotation", m_rotation, config);
     parseBooleanParam("rotationwithcrop", m_rotationWithCrop, config);
-    
-    if(m_rotationWithCrop)
+
+    if (m_rotationWithCrop)
     {
-        if (m_rotation == -90.0 || m_rotation == 90.0) {
+        if (m_rotation == -90.0 || m_rotation == 90.0)
+        {
             std::swap(m_width, m_height);
         }
-        yCDebug(PYLON_CAMERA)<<"Rotation with crop";
+        yCDebug(PYLON_CAMERA) << "Rotation with crop";
     }
 
     if (period != 0.0)
@@ -271,7 +275,6 @@ bool pylonCameraDriver::getRgbResolution(int& width, int& height)
     return true;
 }
 
-
 bool pylonCameraDriver::setRgbResolution(int width, int height)
 {
     bool res = false;
@@ -287,7 +290,6 @@ bool pylonCameraDriver::setRgbResolution(int width, int height)
     }
     return res;
 }
-
 
 bool pylonCameraDriver::setRgbFOV(double horizontalFov, double verticalFov)
 {

@@ -9,7 +9,7 @@ It supports the [Basler cameras](https://docs.baslerweb.com/cameras).
 The **Basler™** cameras currently compatible with YARP are:
 - [daa4200-30mci](https://docs.baslerweb.com/embedded-vision/daa4200-30mci)
 
-License
+# 1. License
 -------
 
 [![License](https://img.shields.io/badge/license-BSD--3--Clause%20%2B%20others-19c2d8.svg)](https://github.com/robotology/yarp-device-realsense2/blob/master/LICENSE)
@@ -22,15 +22,15 @@ The pylonCamera device uses the
 under the [pylon license](https://docs.baslerweb.com/licensing-information).
 See the relative documentation for the terms of the license.
 
-How to use Basler pylon cameras as a YARP device
----------------------------------------------------
-### Dependencies
+# 2. How to use Basler pylon cameras as a YARP device
+
+## 2.1. Dependencies
 Before proceeding further, please install the following dependencies:
 - [YARP 3.5 or greater](https://www.yarp.it/)
 - [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
 - [OpenCV](https://opencv.org/) ( + [CUDA](https://opencv.org/platforms/cuda/) optional)
 
-### Build and install yarp-device-pylon
+## 2.2. Build and install yarp-device-pylon
 
 ```bash
 mkdir build
@@ -43,7 +43,7 @@ In order to make the device detectable, add `<installation_path>/share/yarp` to 
 
 Alternatively, if `YARP` has been installed using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild), it is possible to use `<directory-where-you-downloaded-robotology-superbuild>/build/install` as the `<installation_path>`.
 
-### How to run pylonCamera driver
+## 2.3. How to run pylonCamera driver
 
 From command line:
 
@@ -76,7 +76,7 @@ This is instead the minimum number of parameters for running the device, the def
 yarpdev --device pylonCamera --serial_number 1234567
 ```
 
-## Device documentation
+# 3. Device documentation
 This device driver exposes the `yarp::dev::IFrameGrabberImage` and
 `yarp::dev::IFrameGrabberControls` interfaces to read the images and operate on
 the available settings.
@@ -102,7 +102,7 @@ The parameters accepted by this device are:
 |1024x768|mjpeg|30|
 |1920x1080|mjpeg|20|
 
-## Informations for developers
+# 4. Informations for developers
 
 [This](./doc/dev-informations.md) page contains useful informations for developers.
 

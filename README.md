@@ -26,8 +26,9 @@ See the relative documentation for the terms of the license.
 
 ## 2.1. Dependencies
 Before proceeding further, please install the following dependencies:
+- [Nvidia JetPack](https://developer.nvidia.com/embedded/jetpack) ver 4.4.1 supported for Basler cameras.
 - [YARP 3.5 or greater](https://www.yarp.it/)
-- [pylon](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/)
+- [pylon by Basler](https://www.baslerweb.com/en/products/basler-pylon-camera-software-suite/) ver 7.1.0
 - [OpenCV](https://opencv.org/) ( + [CUDA](https://opencv.org/platforms/cuda/) optional)
 
 ## 2.2. Build and install yarp-device-pylon

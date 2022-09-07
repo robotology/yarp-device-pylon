@@ -15,6 +15,7 @@ find_package(YCM 0.11 REQUIRED)
 find_package(YARP 3.5 COMPONENTS os sig dev cv OPTIONAL_COMPONENTS math REQUIRED)
 find_package(pylon 7.1.0 REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(CUDA QUIET)
 
 include(GNUInstallDirs)
 
@@ -50,6 +51,7 @@ if(NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS 1)
+option(TRY_ACTIVATE_CUDA "Try to compile with CUDA" OFF)
 
 include(AddUninstallTarget)
 

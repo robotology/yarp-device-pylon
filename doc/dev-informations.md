@@ -1,20 +1,20 @@
-# Informations for developer
+# 1. Informations for developer
 
 The Basler camera are currently mounted on iCub Humanoid robot attached on a [NVIDIA Jetson Xavier NX](https://developer.nvidia.com/embedded/jetson-xavier-nx-devkit) or [NVIDIA Jetson Nano](https://developer.nvidia.com/embedded/jetson-nano-developer-kit).
 
-## Available features:
+## 1.1. Available features:
 
 The available features exposed depends by the model of the device:
 - [`daa4200-30mci`](https://docs.baslerweb.com/embedded-vision/available-features#daa4200-30mci)
 
-## Network
+## 1.2. Network
 
 The NVIDIA Nano is connecte p2p to the `icub-head` in the `10.0.0.x` network as follow:
 ![image](https://user-images.githubusercontent.com/19152494/183450965-a3ee7cbd-8715-4456-9152-6c41880fa8d7.png)
 
 It can be reached from outside through a routing rule passing through the `icub-head`.
 
-### SSH
+### 1.2.1. SSH
 
 For connecting via ssh:
 ```bash
@@ -22,7 +22,7 @@ ssh -X nvidia@10.0.0.17
 ```
 `pwd: nvidia`
 
-### Internet acess to Nvidia board via Shorewall
+### 1.2.2. Internet acess to Nvidia board via Shorewall
 
 **You need shorewall to access internet ONLY if the Nano/Xavier is not connected to icub-head**
 
@@ -70,7 +70,7 @@ Test from Nvidia `ping 8.8.8.8`
 - Check Nvidia address
 - Check if eth board on icub-head is correctly configured
 
-## Firmware
+## 1.3. Firmware
 
 For flashing the [jetpack](https://developer.nvidia.com/embedded/jetpack) firmware rember the use the jumper as follow:
 
@@ -78,7 +78,7 @@ For flashing the [jetpack](https://developer.nvidia.com/embedded/jetpack) firmwa
 
 For normal use remove it.
 
-## Software
+## 1.4. Software
 
 If you are using a jetpack based on Ubuntu 18.04, you have to install `cmake` from kitware ppa.
 ```bash
@@ -97,8 +97,26 @@ sudo apt install cmake
 sudo apt install cmake-curses-gui
 ```
 
-# Notes
+# 2. Testing the board
+
+To test if the board images have artifacts it is possible to use yarpdatadumper
+
+```bash
+yarpdev --from PylonConf.ini
+yarpdatadumper --name /log --rxTime --txTime --type image
+yarp connect /right_cam /log mjpeg
+
+...wait for some seconds...
+
+killall yarpdatadumper
+
+```
+Then check in folder /log in each images for artifacts 
+
+# 3. Notes
 
 - From https://docs.baslerweb.com/pylonapi/cpp/pylon_programmingguide
 Basler GigE cameras can be configured to send the image data stream to multiple destinations. Either IP multicasts or IP broadcasts can be used. For more information consult the advanced topics section.
+
+
 

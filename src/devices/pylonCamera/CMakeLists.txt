@@ -22,6 +22,17 @@ if(ENABLE_pylonCamera)
       pylonCameraDriver.h
   )
 
+  list(APPEND OPENCV_DEPS  opencv_core
+                           opencv_video
+                           opencv_imgproc)
+
+  message("-------------------")
+  message(STATUS "${OpenCV_CUDA_VERSION}")
+  message(STATUS "${TRY_ACTIVATE_CUDA}")
+  if (CUDA_FOUND AND OpenCV_CUDA_VERSION AND TRY_ACTIVATE_CUDA)
+    target_compile_definitions(yarp_pylonCamera PUBLIC -DUSE_CUDA)
+  endif()
+
   target_link_libraries(yarp_pylonCamera
     PUBLIC
       YARP::YARP_os
@@ -29,9 +40,7 @@ if(ENABLE_pylonCamera)
       YARP::YARP_dev
       YARP::YARP_cv
       pylon::pylon
-      opencv_core
-      opencv_video
-      opencv_imgproc
+      ${OPENCV_DEPS}
   )
 
   yarp_install(

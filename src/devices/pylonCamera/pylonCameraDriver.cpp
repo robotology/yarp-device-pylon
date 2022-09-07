@@ -707,7 +707,7 @@ bool pylonCameraDriver::getImage(yarp::sig::ImageOf<yarp::sig::PixelRgb>& image)
 #else
                 cv::rotate(rotated, rotated, rotationToCVRot.at(m_rotation));
 #endif  // USE_CUDA
-                image = yarp::cv::fromCvMat<yarp::sig::PixelRgb>(rotated);
+                image.copy(yarp::cv::fromCvMat<yarp::sig::PixelRgb>(rotated));
             }
             else
             {

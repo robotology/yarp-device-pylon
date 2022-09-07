@@ -171,7 +171,7 @@ bool pylonCameraDriver::open(Searchable& config)
     parseUint32Param("height", m_height, config);
     parseFloat64Param("period", period, config);
     parseFloat64Param("rotation", m_rotation, config);
-    parseBooleanParam("rotationwithcrop", m_rotationWithCrop, config);
+    parseBooleanParam("rotation_with_crop", m_rotationWithCrop, config);
 
     if (m_rotationWithCrop)
     {

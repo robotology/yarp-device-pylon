@@ -102,7 +102,7 @@ The parameters accepted by this device are:
 |-|-|-|
 |640x480|mjpeg|30|
 |1024x768|mjpeg|30|
-|1920x1080|mjpeg|20|
+|1920x1080|mjpeg|30 (Xavier NX) - 20 (Nano)|
 
 # 4. Informations for developers
 

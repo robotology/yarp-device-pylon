@@ -62,3 +62,9 @@ sudo mv backup.img.raw bootloader/system.img #rename new image
 sudo ./flash.sh -r jetson-xavier-nx-devkit-emmc mmcblk0p1
 ```
 
+## 4.3. Current official images
+Current cloned image:  
+[Here](\\iiticubstor01.iit.local\common\system-images\iCub\icub-head-cam-img.zip)
+
+
+

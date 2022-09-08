@@ -21,18 +21,18 @@ From [here](https://developer.nvidia.com/embedded/jetpack-sdk-462#collapseAllJet
 From [here](https://connecttech.com/product/quark-carrier-nvidia-jetson-xavier-nx/) Connect Quark carrier
 
 ## 2.3. Install Pylon
-Download and install latest version of Basler software from [here](https://www.baslerweb.com/en/downloads/software-downloads/#type=pylonsoftware;language=all;version=all;os=linuxarm;series=all;model=all).  
+Download and install the latest version of Basler software from [here](https://www.baslerweb.com/en/downloads/software-downloads/#type=pylonsoftware;language=all;version=all;os=linuxarm;series=all;model=all).  
 For example `pylon 7.1.0 Camera Software Suite Linux ARM 64 bit - Debian Installer Package`
 
 ![jumper](../img/basler.png)
 
 
 ## 2.4. Refine CPU and fan setup
-For this step we can use [jtop](https://github.com/rbonghi/jetson_stats)
+For this step, we can use [jtop](https://github.com/rbonghi/jetson_stats)
 
 ![jumper](../img/jtop.png)
 
-With this tool it is possible to limitate the number of CPUs and the power consumption.
+With this tool, it is possible to limitate the number of CPUs and power consumption.
 
 # 3. Create clone image
 

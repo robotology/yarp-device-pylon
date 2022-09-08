@@ -106,7 +106,8 @@ The parameters accepted by this device are:
 
 # 4. Informations for developers
 
-[This](./doc/dev-informations.md) page contains useful informations for developers.
+[This](./doc/dev-informations.md) page contains useful informations for developers.  
+[Board install informations](board-installation-information.md) this page contains the procedure for install the Xavier board and Quark carrier.
 
 Maintainers
 --------------

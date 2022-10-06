@@ -136,7 +136,7 @@ bool pylonCameraDriver::startCamera()
     {
         if (!m_camera_ptr->IsGrabbing())
         {
-            m_camera_ptr->StartGrabbing();
+            m_camera_ptr->StartGrabbing(GrabStrategy_LatestImageOnly);
         }
     }
     return true;
